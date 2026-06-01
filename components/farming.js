@@ -112,12 +112,43 @@ AFRAME.registerComponent('farmeable', {
     this.ready = false;
     this.tooltip.setAttribute('visible', false);
 
+    // Determinar cantidad y cooldown según las herramientas del inventario
+    let harvestAmount = this.data.amount;
+    let actualCooldown = this.data.cooldown;
+    let hasToolUpgrade = false;
+    let toolEmoji = '';
+
+    if (window.Inventory) {
+      if (this.data.type === 'madera' && window.Inventory.get('hacha_hierro') > 0) {
+        harvestAmount *= 2;
+        actualCooldown *= 0.5;
+        hasToolUpgrade = true;
+        toolEmoji = '🪓';
+      } else if (this.data.type === 'roca' && window.Inventory.get('pico_hierro') > 0) {
+        harvestAmount *= 2;
+        actualCooldown *= 0.5;
+        hasToolUpgrade = true;
+        toolEmoji = '⛏️';
+      } else if (this.data.type === 'pez' && window.Inventory.get('cana_hierro') > 0) {
+        harvestAmount *= 2;
+        actualCooldown *= 0.5;
+        hasToolUpgrade = true;
+        toolEmoji = '🎣';
+      }
+    }
+
+    if (hasToolUpgrade) {
+      window.dispatchEvent(new CustomEvent('game-message', {
+        detail: { text: `✨ ¡Efecto de ${toolEmoji}! Recolección veloz 2x`, type: 'gold' }
+      }));
+    }
+
     // Emitir partículas visuales
     this._spawnParticles();
 
     // Añadir recurso al inventario
     window.dispatchEvent(new CustomEvent('inventory-add', {
-      detail: { type: this.data.type, amount: this.data.amount }
+      detail: { type: this.data.type, amount: harvestAmount }
     }));
 
     // Feedback visual: encogerse y oscurecerse
@@ -130,7 +161,7 @@ AFRAME.registerComponent('farmeable', {
     });
 
     // Iniciar cooldown visual con barra
-    this._startCooldownBar();
+    this._startCooldownBar(actualCooldown);
 
     // Restaurar después del cooldown
     setTimeout(() => {
@@ -142,7 +173,7 @@ AFRAME.registerComponent('farmeable', {
         dur: 300,
         easing: 'easeOutBack',
       });
-    }, this.data.cooldown);
+    }, actualCooldown);
   },
 
   _spawnParticles() {
@@ -179,7 +210,8 @@ AFRAME.registerComponent('farmeable', {
     }
   },
 
-  _startCooldownBar() {
+  _startCooldownBar(cooldown) {
+    const actualCd = cooldown || this.data.cooldown;
     // Barra de cooldown flotante sobre el recurso
     const bar = document.createElement('a-entity');
     bar.setAttribute('position', '0 2.6 0');
@@ -201,13 +233,13 @@ AFRAME.registerComponent('farmeable', {
       property: 'scale',
       from: '1 1 1',
       to: '0 1 1',
-      dur: this.data.cooldown,
+      dur: actualCd,
       easing: 'linear',
     });
     bar.appendChild(fill);
 
     this.el.appendChild(bar);
-    setTimeout(() => this.el.removeChild(bar), this.data.cooldown + 100);
+    setTimeout(() => this.el.removeChild(bar), actualCd + 100);
   },
 
   _showCooldownFeedback() {

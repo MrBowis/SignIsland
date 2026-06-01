@@ -17,7 +17,7 @@ const DEFAULT_LESSONS = [
     handshape: '☝️', movement: '🔁', location: '👄',
     youtubeId: 'S-cx-IiDUHg',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=S-cx-IiDUHg',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=hablar',
     options: ['Hablar', 'Escuchar', 'Mirar', 'Gritar'], correct: 0,
   },
   {
@@ -26,7 +26,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚', movement: '🔄', location: '🫁',
     youtubeId: 'L0Dp2xZB9-U',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=L0Dp2xZB9-U',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=como-te-sientes',
     options: ['¿Dónde vives?', '¿Qué hora es?', '¿Cómo te sientes?', '¿Quién eres?'], correct: 2,
   },
   {
@@ -35,7 +35,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚', movement: '↔️', location: '🙂',
     youtubeId: 'aB4nMgDQyes',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=aB4nMgDQyes',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=como-esta',
     options: ['¿Cómo está?', 'Hasta luego', 'Buenos días', 'Por favor'], correct: 0,
   },
   {
@@ -44,7 +44,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚', movement: '➡️', location: '🙂',
     youtubeId: 'NnXpTwGFhv0',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=NnXpTwGFhv0',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=hace-tiempo-que-no-te-veo',
     options: ['Nos vemos mañana', 'Hace tiempo que no te veo', 'Adiós', 'Mucho gusto'], correct: 1,
   },
   {
@@ -53,7 +53,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤙', movement: '↔️', location: '🙂',
     youtubeId: 'gr4wOlOs4t4',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=gr4wOlOs4t4',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=que-tal',
     options: ['Hola', 'Hasta mañana', 'Por favor', '¿Qué tal?'], correct: 3,
   },
   {
@@ -62,7 +62,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚🤚', movement: '🔄', location: '🫁',
     youtubeId: 'RocuYZgMKlQ',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=RocuYZgMKlQ',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=buenas-noches',
     options: ['Buenos días', 'Buenas noches', 'Buenas tardes', 'Hola'], correct: 1,
   },
   {
@@ -71,7 +71,7 @@ const DEFAULT_LESSONS = [
     handshape: '✊✊', movement: '⬇️', location: '🫁',
     youtubeId: 'Btj3-tWetf0',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=Btj3-tWetf0',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=hacer',
     options: ['Hacer', 'Romper', 'Destruir', 'Pensar'], correct: 0,
   },
   {
@@ -80,7 +80,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚🤚', movement: '➡️', location: '🫁',
     youtubeId: 'UIkQU2O5ktc',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=UIkQU2O5ktc',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=dar',
     options: ['Quitar', 'Recibir', 'Dar', 'Robar'], correct: 2,
   },
   {
@@ -89,7 +89,7 @@ const DEFAULT_LESSONS = [
     handshape: '☝️', movement: '⬇️', location: '🙂',
     youtubeId: 'ffpkmgyQGfo',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=ffpkmgyQGfo',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=saber',
     options: ['Olvidar', 'Saber', 'Ignorar', 'Dudar'], correct: 1,
   },
   {
@@ -98,7 +98,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚🤚', movement: '🔁', location: '🫁',
     youtubeId: 'GpX-lgGir1A',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=GpX-lgGir1A',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=nadar',
     options: ['Correr', 'Nadar', 'Volar', 'Saltar'], correct: 1,
   },
   {
@@ -107,7 +107,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚🤚', movement: '⬆️', location: '🫁',
     youtubeId: 'cUs97izzUpk',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=cUs97izzUpk',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=feliz',
     options: ['Triste', 'Enojado', 'Feliz', 'Asustado'], correct: 2,
   },
   {
@@ -116,7 +116,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚', movement: '➡️', location: '🙂',
     youtubeId: 'OAPj7nxv4iE',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=OAPj7nxv4iE',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=facil',
     options: ['Difícil', 'Fácil', 'Imposible', 'Largo'], correct: 1,
   },
   {
@@ -125,7 +125,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚🤚', movement: '↔️', location: '🫁',
     youtubeId: 'Nw6w7-8bSKs',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=Nw6w7-8bSKs',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=nada',
     options: ['Todo', 'Algo', 'Nada', 'Mucho'], correct: 2,
   },
   {
@@ -134,7 +134,7 @@ const DEFAULT_LESSONS = [
     handshape: '🤚🤚', movement: '↔️', location: '🫁',
     youtubeId: 'VbSuBUJzyIw',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=VbSuBUJzyIw',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=donde',
     options: ['¿Cuándo?', '¿Dónde?', '¿Cómo?', '¿Qué?'], correct: 1,
   },
   {
@@ -143,7 +143,7 @@ const DEFAULT_LESSONS = [
     handshape: '☝️', movement: '🔁', location: '🫁',
     youtubeId: 'BVYQn8Z8mQk',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=BVYQn8Z8mQk',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=cuando',
     options: ['¿Cuándo?', '¿Por qué?', '¿Quién?', '¿Cuánto?'], correct: 0,
   },
   {
@@ -152,7 +152,7 @@ const DEFAULT_LESSONS = [
     handshape: '☝️', movement: '🔄', location: '🫁',
     youtubeId: '_NV7UPduH3E',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=_NV7UPduH3E',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=que',
     options: ['¿Dónde?', '¿Cómo?', '¿Qué?', '¿Quién?'], correct: 2,
   },
   {
@@ -161,7 +161,7 @@ const DEFAULT_LESSONS = [
     handshape: '☝️☝️', movement: '↔️', location: '🫁',
     youtubeId: 'SSKlBHbEIJ8',
     source: 'Diccionario Gabriel Román — CONADIS Ecuador',
-    sourceUrl: 'https://www.youtube.com/watch?v=SSKlBHbEIJ8',
+    sourceUrl: 'http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=cual',
     options: ['¿Cómo?', '¿Cuál?', '¿Cuándo?', '¿Por qué?'], correct: 1,
   }
 ];
@@ -340,10 +340,7 @@ AFRAME.registerComponent('academia', {
         <!-- PANTALLA: LISTA DE LECCIONES -->
         <div id="acad-screen-list">
           <div class="acad-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="acad-tabs" style="display:flex; gap:10px;">
-              <button class="acad-tab active" id="acad-tab-lessons" style="background:transparent; border:none; color:#7ee8a2; font-weight:700; cursor:pointer; padding:6px 12px; font-size:0.95rem; border-bottom:2px solid #7ee8a2; outline:none; transition:all 0.2s;">📚 Lecciones</button>
-              <button class="acad-tab" id="acad-tab-alphabet" style="background:transparent; border:none; color:#aaa; font-weight:600; cursor:pointer; padding:6px 12px; font-size:0.95rem; outline:none; transition:all 0.2s;">🔤 Abecedario</button>
-            </div>
+            <span style="color:#7ee8a2; font-weight:800; font-size:1.1rem; letter-spacing:0.5px;">📚 Academia de Señas (LSEC)</span>
             <button class="acad-close" id="acad-close-btn">✕</button>
           </div>
           <div class="acad-progress-bar-wrap">
@@ -354,26 +351,6 @@ AFRAME.registerComponent('academia', {
             <button id="acad-reset-btn" style="background:transparent; border:none; color:#e74c3c; font-size:0.75rem; cursor:pointer; font-weight:600; padding:2px 8px; border-radius:12px; border:1px solid rgba(231,76,60,0.2); transition:all 0.2s;">🔄 Reiniciar</button>
           </div>
           <div class="acad-lesson-grid" id="acad-lesson-grid"></div>
-        </div>
-
-        <!-- PANTALLA: ALFABETO (ABECEDARIO) -->
-        <div id="acad-screen-alphabet" style="display:none">
-          <div class="acad-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="acad-tabs" style="display:flex; gap:10px;">
-              <button class="acad-tab" id="acad-tab-lessons-2" style="background:transparent; border:none; color:#aaa; font-weight:600; cursor:pointer; padding:6px 12px; font-size:0.95rem; outline:none;">📚 Lecciones</button>
-              <button class="acad-tab active" id="acad-tab-alphabet-2" style="background:transparent; border:none; color:#7ee8a2; font-weight:700; cursor:pointer; padding:6px 12px; font-size:0.95rem; border-bottom:2px solid #7ee8a2; outline:none;">🔤 Abecedario</button>
-            </div>
-            <button class="acad-close" id="acad-close-btn-2">✕</button>
-          </div>
-          <div class="acad-alphabet-body" style="padding:14px 18px 20px;">
-            <div class="acad-alphabet-grid" id="acad-alphabet-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:12px; max-height:220px; overflow-y:auto; padding:4px; border: 1px solid rgba(255,255,255,0.05); border-radius:12px; background:rgba(0,0,0,0.2);"></div>
-            <div id="acad-alphabet-player" style="display:none; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:16px; text-align:center; animation:fadeIn 0.3s ease;">
-              <div id="acad-alphabet-video-display" style="border-radius:10px; overflow:hidden; margin-bottom:8px; height:220px; display:block; background:#000; border:1px solid rgba(255,255,255,0.1);"></div>
-              <div style="font-weight:700; font-size:1.1rem; color:#7ee8a2; margin-bottom:4px;" id="acad-alphabet-letter-title"></div>
-              <div style="font-size:0.8rem; color:#bbb; line-height:1.4; margin-bottom:8px;" id="acad-alphabet-letter-desc"></div>
-              <div style="font-size:0.65rem; color:#666;">Fuente: <a href="https://www.youtube.com/watch?v=J3e3mYk_y48" target="_blank" style="color:#555; text-decoration: underline;">Inclusión Ecuador (YouTube)</a></div>
-            </div>
-          </div>
         </div>
 
         <!-- PANTALLA: LECCIÓN ACTIVA -->
@@ -402,16 +379,9 @@ AFRAME.registerComponent('academia', {
     this.panel = panel;
 
     document.getElementById('acad-close-btn').addEventListener('click', () => this.close());
-    document.getElementById('acad-close-btn-2').addEventListener('click', () => this.close());
     document.getElementById('acad-overlay').addEventListener('click', () => this.close());
     document.getElementById('acad-back-btn').addEventListener('click', () => this._showList());
     document.getElementById('acad-next-btn').addEventListener('click', () => this._nextLesson());
-
-    // Eventos de pestañas
-    document.getElementById('acad-tab-lessons').addEventListener('click', () => this._switchTab('lessons'));
-    document.getElementById('acad-tab-alphabet').addEventListener('click', () => this._switchTab('alphabet'));
-    document.getElementById('acad-tab-lessons-2').addEventListener('click', () => this._switchTab('lessons'));
-    document.getElementById('acad-tab-alphabet-2').addEventListener('click', () => this._switchTab('alphabet'));
 
     // Botón de reset
     document.getElementById('acad-reset-btn').addEventListener('click', () => {
@@ -580,7 +550,6 @@ AFRAME.registerComponent('academia', {
   // ── Pantalla: lista de lecciones ─────────────
   _showList() {
     document.getElementById('acad-screen-list').style.display = 'block';
-    document.getElementById('acad-screen-alphabet').style.display = 'none';
     document.getElementById('acad-screen-lesson').style.display = 'none';
 
     const total = this.lessons.length;
@@ -621,7 +590,6 @@ AFRAME.registerComponent('academia', {
     this.answered = false;
 
     document.getElementById('acad-screen-list').style.display = 'none';
-    document.getElementById('acad-screen-alphabet').style.display = 'none';
     document.getElementById('acad-screen-lesson').style.display = 'block';
 
     document.getElementById('acad-lesson-title').textContent =
@@ -631,7 +599,7 @@ AFRAME.registerComponent('academia', {
     if (lesson.youtubeId) {
       display.innerHTML = `
         <iframe
-          src="https://www.youtube.com/embed/${lesson.youtubeId}"
+          src="https://www.youtube-nocookie.com/embed/${lesson.youtubeId}?rel=0&modestbranding=1&controls=1"
           frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowfullscreen
@@ -739,93 +707,7 @@ AFRAME.registerComponent('academia', {
     }
   },
 
-  // ── Pestañas e Interfaz de Abecedario ───────────
-  _switchTab(tab) {
-    const screenList = document.getElementById('acad-screen-list');
-    const screenAlphabet = document.getElementById('acad-screen-alphabet');
-    const screenLesson = document.getElementById('acad-screen-lesson');
-
-    screenLesson.style.display = 'none';
-
-    if (tab === 'lessons') {
-      screenList.style.display = 'block';
-      screenAlphabet.style.display = 'none';
-      this._showList();
-    } else {
-      screenList.style.display = 'none';
-      screenAlphabet.style.display = 'block';
-      this._showAlphabet();
-    }
-  },
-
-  _showAlphabet() {
-    const grid = document.getElementById('acad-alphabet-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    const alphabet = window.ALPHABET_LSEC || [];
-    alphabet.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'acad-alphabet-card';
-      card.style.cssText = `
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px;
-        padding: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-      `;
-      card.innerHTML = `
-        <span style="font-size: 1.5rem;">${item.emoji}</span>
-        <span style="font-weight: 800; font-size: 1.1rem; color: #fff;">${item.letter}</span>
-      `;
-
-      card.addEventListener('mouseover', () => {
-        card.style.background = 'rgba(255,255,255,0.1)';
-        card.style.transform = 'translateY(-2px)';
-      });
-      card.addEventListener('mouseout', () => {
-        card.style.background = 'rgba(255,255,255,0.05)';
-        card.style.transform = 'translateY(0)';
-      });
-
-      card.addEventListener('click', () => this._playAlphabetLetter(item));
-      grid.appendChild(card);
-    });
-  },
-
-  _playAlphabetLetter(item) {
-    const player = document.getElementById('acad-alphabet-player');
-    const display = document.getElementById('acad-alphabet-video-display');
-    const title = document.getElementById('acad-alphabet-letter-title');
-    const desc = document.getElementById('acad-alphabet-letter-desc');
-
-    title.textContent = `Letra ${item.letter} ${item.emoji}`;
-    desc.textContent = item.description;
-
-    display.innerHTML = `
-      <iframe
-        src="https://www.youtube.com/embed/${item.youtubeId}?start=${item.startSeconds}&autoplay=1"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        style="width: 100%; height: 100%; border: 0; display: block;"
-      ></iframe>
-    `;
-
-    player.style.display = 'block';
-    
-    // Auto-scroll inside modal to center player
-    setTimeout(() => {
-      player.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
-  },
+  // (Secciones de abecedario de señas y pestañas eliminadas)
 
   // ── Tecla L ───────────────────────────────────
   _onKey(e) {

@@ -17,7 +17,6 @@
   <script src="components/inventory.js"></script>
   <script src="components/farming.js"></script>
   <script src="components/shop.js"></script>
-  <script src="components/alphabet-lsec.js"></script>
   <script src="components/sign-lesson.js"></script>
 
   <style>
@@ -183,6 +182,11 @@
 
     <a-assets timeout="10000">
       <audio id="ambient-ocean" src="assets/audio/ocean.mp3" preload="auto" loop></audio>
+      <a-asset-item id="academy-model" src="assets/models/academy.glb"></a-asset-item>
+      <a-asset-item id="tree-model" src="assets/models/arbol.glb"></a-asset-item>
+      <a-asset-item id="npc-model" src="assets/models/npc1.glb"></a-asset-item>
+      <a-asset-item id="rock-model" src="assets/models/roca.glb"></a-asset-item>
+      <a-asset-item id="store-model" src="assets/models/store.glb"></a-asset-item>
     </a-assets>
 
     <a-entity environment="
@@ -207,19 +211,9 @@
 
     <!-- ═══════════ ACADEMIA (Fase 4) ═══════════ -->
     <a-entity id="academia-building" position="0 0 -20">
-      <a-box width="16" height="10" depth="14" color="#e8d5b0" shadow="cast: true; receive: true"
-        position="0 5 0"></a-box>
-      <a-cone radius-bottom="11" radius-top="0" height="5" color="#c0392b" shadow="cast: true"
-        position="0 12.5 0"></a-cone>
-      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="-5 5 7" shadow="cast: true"></a-cylinder>
-      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="-2 5 7" shadow="cast: true"></a-cylinder>
-      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="2 5 7" shadow="cast: true"></a-cylinder>
-      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="5 5 7" shadow="cast: true"></a-cylinder>
-      <a-box width="2.5" height="4" depth="0.3" color="#8b5e3c" position="0 2 7.05" shadow="cast: true"></a-box>
-      <a-box width="2" height="2" depth="0.2" color="#87ceeb" opacity="0.7" position="-5 6 7.1"></a-box>
-      <a-box width="2" height="2" depth="0.2" color="#87ceeb" opacity="0.7" position="5 6 7.1"></a-box>
-      <a-text value="🏛️ ACADEMIA DE SEÑAS" align="center" color="#2c1810" width="10" position="0 11 7.2"
-        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+      <a-entity gltf-model="#academy-model" position="0 0 0" rotation="0 180 0" scale="2 2 2" shadow="cast: true; receive: true"></a-entity>
+      <a-text value="🏛️ ACADEMIA DE SEÑAS" align="center" color="#fff" width="10" position="0 11 7.2"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" shadow></a-text>
       <!-- Trigger academia con componente academia (Fase 4) -->
       <a-entity academia="range: 10" position="0 1 9" geometry="primitive: box; width: 3; height: 3; depth: 0.1"
         material="opacity: 0"></a-entity>
@@ -233,14 +227,8 @@
 
     <!-- ═══════════ TIENDA COMIDA (Fase 3) ═══════════ -->
     <a-entity id="tienda-comida" position="-25 0 -5">
-      <a-box width="8" height="5" depth="8" color="#f39c12" shadow="cast: true; receive: true"
-        position="0 2.5 0"></a-box>
-      <a-box width="10" height="0.5" depth="10" color="#e67e22" position="0 5.2 0" shadow="cast: true"></a-box>
-      <a-box width="2" height="3" depth="0.2" color="#8b5e3c" position="0 1.5 4.1"></a-box>
-      <a-entity position="0 5.5 3">
-        <a-box width="10" height="0.2" depth="3" color="#e74c3c" rotation="20 0 0"></a-box>
-      </a-entity>
-      <a-text value="🍎 COMIDA" align="center" color="#fff" width="6" position="0 5.8 4.2"></a-text>
+      <a-entity gltf-model="#store-model" position="0 0 0" scale="1.3 1.3 1.3" rotation="0 180 0" shadow="cast: true; receive: true"></a-entity>
+      <a-text value="🍎 COMIDA" align="center" color="#fff" width="6" position="0 5.8 4.2" shadow></a-text>
       <!-- NPC diálogo -->
       <a-entity npc-dialog="name: Tienda Comida; emojis: 🍎😊,🥕💰,🐟🍳,😋👍; label: Vendedor de comida; color: #f39c12"
         position="-2 1 3.5" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
@@ -254,10 +242,8 @@
 
     <!-- ═══════════ TIENDA ROPA (Fase 3) ═══════════ -->
     <a-entity id="tienda-ropa" position="25 0 -5">
-      <a-box width="8" height="6" depth="8" color="#9b59b6" shadow="cast: true; receive: true" position="0 3 0"></a-box>
-      <a-box width="9" height="0.4" depth="9" color="#8e44ad" position="0 6.2 0"></a-box>
-      <a-box width="2" height="3.5" depth="0.2" color="#6c3483" position="0 1.75 4.1"></a-box>
-      <a-text value="👕 ROPA" align="center" color="#fff" width="6" position="0 6.8 4.2"></a-text>
+      <a-entity gltf-model="#store-model" position="0 0 0" scale="1.3 1.3 1.3" rotation="0 180 0" shadow="cast: true; receive: true"></a-entity>
+      <a-text value="👕 ROPA" align="center" color="#fff" width="6" position="0 6.8 4.2" shadow></a-text>
       <a-cylinder radius="0.15" height="1.5" color="#d5d8dc" position="-2 0.75 3" shadow="cast: true"></a-cylinder>
       <a-sphere radius="0.25" color="#d5d8dc" position="-2 1.6 3"></a-sphere>
       <a-cylinder radius="0.15" height="1.5" color="#d5d8dc" position="2 0.75 3" shadow="cast: true"></a-cylinder>
@@ -273,11 +259,8 @@
 
     <!-- ═══════════ TIENDA HERRAMIENTAS (Fase 3) ═══════════ -->
     <a-entity id="tienda-herramientas" position="-25 0 -25">
-      <a-box width="9" height="5.5" depth="8" color="#7f8c8d" shadow="cast: true; receive: true"
-        position="0 2.75 0"></a-box>
-      <a-box width="10" height="0.5" depth="9" color="#636e72" position="0 5.8 0"></a-box>
-      <a-box width="2.2" height="3.5" depth="0.2" color="#4a4a4a" position="0 1.75 4.1"></a-box>
-      <a-text value="⚒️ HERRAMIENTAS" align="center" color="#f1c40f" width="7" position="0 6.3 4.2"></a-text>
+      <a-entity gltf-model="#store-model" position="0 0 0" scale="1.3 1.3 1.3" rotation="0 180 0" shadow="cast: true; receive: true"></a-entity>
+      <a-text value="⚒️ HERRAMIENTAS" align="center" color="#f1c40f" width="7" position="0 6.3 4.2" shadow></a-text>
       <a-entity npc-dialog="name: Tienda Herramientas; emojis: ⚒️😐,🪓💰,⛏️👍,🔨✅; label: Herrero; color: #7f8c8d"
         position="-2 1 3.5" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
       <!-- NPC cuerpo 3D (visible) -->
@@ -289,14 +272,14 @@
 
     <!-- ═══════════ ZONA ROCAS — farmeable (Fase 3) ═══════════ -->
     <a-entity id="zona-rocas" position="30 0 -30">
-      <a-text value="🪨 ZONA DE ROCAS" align="center" color="#95a5a6" width="8" position="0 4 0"></a-text>
-      <!-- Rocas clickeables -->
-      <a-sphere radius="1.5" color="#95a5a6" position="0 1 0" shadow="cast: true; receive: true"
-        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-sphere>
-      <a-sphere radius="1.0" color="#7f8c8d" position="2.5 0.7 1" shadow="cast: true"
-        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-sphere>
-      <a-sphere radius="1.2" color="#aab0b5" position="-2 0.8 -1" shadow="cast: true"
-        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-sphere>
+      <a-text value="🪨 ZONA DE ROCAS" align="center" color="#95a5a6" width="8" position="0 4 0" shadow></a-text>
+      <!-- Rocas clickeables con modelo GLTF -->
+      <a-entity gltf-model="#rock-model" scale="1.5 1.5 1.5" position="0 0 0" rotation="0 45 0" shadow="cast: true; receive: true"
+        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-entity>
+      <a-entity gltf-model="#rock-model" scale="1.0 1.0 1.0" position="2.5 0 1" rotation="0 180 0" shadow="cast: true"
+        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-entity>
+      <a-entity gltf-model="#rock-model" scale="1.2 1.2 1.2" position="-2 0 -1" rotation="0 290 0" shadow="cast: true"
+        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-entity>
       <!-- NPC guardián -->
       <a-entity npc-dialog="name: Zona Rocas; emojis: 🪨⛏️,💪😤,🪨💰,✅😊; label: Minero guardián; color: #95a5a6"
         position="4 1 0" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
@@ -307,28 +290,14 @@
 
     <!-- ═══════════ ZONA MADERA — farmeable (Fase 3) ═══════════ -->
     <a-entity id="zona-madera" position="-35 0 -30">
-      <a-text value="🌲 BOSQUE DE MADERA" align="center" color="#27ae60" width="9" position="0 6 0"></a-text>
-      <!-- Árbol 1 — farmeable en el tronco -->
-      <a-entity position="0 0 0">
-        <a-cylinder radius="0.4" height="5" color="#8B4513" position="0 2.5 0" shadow="cast: true"
-          farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-cylinder>
-        <a-cone radius-bottom="2.5" radius-top="0" height="4" color="#27ae60" position="0 7 0"
-          shadow="cast: true"></a-cone>
-      </a-entity>
-      <!-- Árbol 2 -->
-      <a-entity position="3 0 -2">
-        <a-cylinder radius="0.35" height="4.5" color="#7a3b11" position="0 2.25 0" shadow="cast: true"
-          farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-cylinder>
-        <a-cone radius-bottom="2.2" radius-top="0" height="3.5" color="#2ecc71" position="0 6 0"
-          shadow="cast: true"></a-cone>
-      </a-entity>
-      <!-- Árbol 3 -->
-      <a-entity position="-3 0 1">
-        <a-cylinder radius="0.45" height="5.5" color="#6b3010" position="0 2.75 0" shadow="cast: true"
-          farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-cylinder>
-        <a-cone radius-bottom="2.8" radius-top="0" height="4.5" color="#1e8449" position="0 7.5 0"
-          shadow="cast: true"></a-cone>
-      </a-entity>
+      <a-text value="🌲 BOSQUE DE MADERA" align="center" color="#27ae60" width="9" position="0 6 0" shadow></a-text>
+      <!-- Árboles con modelo GLTF -->
+      <a-entity gltf-model="#tree-model" scale="1.4 1.4 1.4" position="0 0 0" shadow="cast: true; receive: true"
+        farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-entity>
+      <a-entity gltf-model="#tree-model" scale="1.2 1.2 1.2" position="3 0 -2" shadow="cast: true"
+        farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-entity>
+      <a-entity gltf-model="#tree-model" scale="1.5 1.5 1.5" position="-3 0 1" shadow="cast: true"
+        farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-entity>
       <a-entity npc-dialog="name: Zona Madera; emojis: 🌲🪓,💪🌳,🪵💰,😊👍; label: Guardabosque; color: #27ae60"
         position="5 1 0" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
       <!-- NPC cuerpo 3D (visible) -->
@@ -387,7 +356,7 @@
 
 
     <!-- ═══════════ JUGADOR ═══════════ -->
-    <a-entity id="player" position="0 0 10" movement-controls="speed: 0.12; fly: false; constrainToNavMesh: false">
+    <a-entity id="player" position="0 0 17" movement-controls="speed: 0.12; fly: false; constrainToNavMesh: false">
       <a-camera id="camera" position="0 0.75 0" look-controls="pointerLockEnabled: true" wasd-controls="enabled: false">
         <a-entity cursor="rayOrigin: mouse; fuse: false"
           raycaster="objects: .farmeable-obj, [npc-dialog]; near: 0; far: 7" position="0 0 -1"

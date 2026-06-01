@@ -12,11 +12,28 @@ const RESOURCE_META = {
   roca: { icon: '🪨', label: 'Rocas', value: 5 },
   madera: { icon: '🪵', label: 'Madera', value: 4 },
   pez: { icon: '🐟', label: 'Peces', value: 6 },
+  
+  manzana: { icon: '🍎', label: 'Manzana Jugosa', value: 0 },
+  zanahoria: { icon: '🥕', label: 'Zanahoria Fresca', value: 0 },
+  pastel: { icon: '🍰', label: 'Pastel Especial', value: 0 },
+  
+  sombrero: { icon: '👒', label: 'Sombrero Playero', value: 0 },
+  capa: { icon: '🧥', label: 'Abrigo Elegante', value: 0 },
+  corona: { icon: '👑', label: 'Corona de Oro', value: 0 },
+  
+  hacha_hierro: { icon: '🪓', label: 'Hacha Reforzada', value: 0 },
+  pico_hierro: { icon: '⛏️', label: 'Pico de Acero', value: 0 },
+  cana_hierro: { icon: '🎣', label: 'Caña Avanzada', value: 0 }
 };
 
 // ─── Estado del inventario ────────────────────────
 const Inventory = {
-  _data: { roca: 0, madera: 0, pez: 0, monedas: 0 },
+  _data: { 
+    roca: 0, madera: 0, pez: 0, monedas: 0,
+    manzana: 0, zanahoria: 0, pastel: 0,
+    sombrero: 0, capa: 0, corona: 0,
+    hacha_hierro: 0, pico_hierro: 0, cana_hierro: 0
+  },
 
   load() {
     try {
@@ -93,7 +110,7 @@ function renderInventoryHUD(data) {
   const hud = document.getElementById('inventory-hud');
   if (!hud) return;
 
-  hud.innerHTML = `
+  let html = `
     <div class="inv-row">
       <span class="inv-item monedas">💰 ${data.monedas}</span>
       <span class="inv-item">🪨 ${data.roca}</span>
@@ -101,6 +118,32 @@ function renderInventoryHUD(data) {
       <span class="inv-item">🐟 ${data.pez}</span>
     </div>
   `;
+
+  // Fila secundaria de equipamiento y consumibles (bolsa / mochila)
+  const items = [];
+  
+  if (data.manzana > 0) items.push(`<span class="inv-badge" title="Manzanas">🍎x${data.manzana}</span>`);
+  if (data.zanahoria > 0) items.push(`<span class="inv-badge" title="Zanahorias">🥕x${data.zanahoria}</span>`);
+  if (data.pastel > 0) items.push(`<span class="inv-badge" title="Pastel Especial">🍰x${data.pastel}</span>`);
+  
+  if (data.sombrero > 0) items.push(`<span class="inv-badge outfit" title="Sombrero Playero">👒</span>`);
+  if (data.capa > 0) items.push(`<span class="inv-badge outfit" title="Abrigo Elegante">🧥</span>`);
+  if (data.corona > 0) items.push(`<span class="inv-badge outfit" title="Corona de Oro">👑</span>`);
+  
+  if (data.hacha_hierro > 0) items.push(`<span class="inv-badge tool" title="Hacha Reforzada">🪓</span>`);
+  if (data.pico_hierro > 0) items.push(`<span class="inv-badge tool" title="Pico de Acero">⛏️</span>`);
+  if (data.cana_hierro > 0) items.push(`<span class="inv-badge tool" title="Caña Avanzada">🎣</span>`);
+
+  if (items.length > 0) {
+    html += `
+      <div class="inv-row items-row" style="margin-top: 6px; padding: 5px 14px; background: rgba(15, 23, 42, 0.85); border-radius: 20px; font-size: 12px; gap: 8px; justify-content: center; display: inline-flex; animation: popIn 0.3s ease;">
+        <span style="color: #7ee8a2; font-weight: 700; margin-right: 2px;">🎒 Mochila:</span>
+        ${items.join(' ')}
+      </div>
+    `;
+  }
+
+  hud.innerHTML = html;
 }
 
 // ─── Inyectar estilos del HUD ────────────────────
@@ -117,6 +160,9 @@ function injectInventoryStyles() {
       z-index: 200;
       pointer-events: none;
       font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .inv-row {
       display: flex;
@@ -136,6 +182,28 @@ function injectInventoryStyles() {
     .inv-item.monedas {
       color: #f1c40f;
       font-weight: 700;
+    }
+    .inv-badge {
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-weight: 600;
+    }
+    .inv-badge.outfit {
+      background: rgba(155, 89, 182, 0.2);
+      border: 1px solid rgba(155, 89, 182, 0.4);
+    }
+    .inv-badge.tool {
+      background: rgba(52, 152, 219, 0.2);
+      border: 1px solid rgba(52, 152, 219, 0.4);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
   `;
   document.head.appendChild(style);

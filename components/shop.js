@@ -16,16 +16,34 @@
  */
 
 const SHOP_CONFIGS = {
-  comida:        { emoji: '🍎', desc: 'Compro todo lo que el mar y la tierra dan.',      color: '#f39c12' },
-  ropa:          { emoji: '👕', desc: 'Necesito materiales para mis telas.',              color: '#9b59b6' },
-  herramientas:  { emoji: '⚒️', desc: 'La roca y la madera son mi oficio.',              color: '#7f8c8d' },
-  default:       { emoji: '🏪', desc: 'Buenos días, ¿qué traes hoy?',                    color: '#3498db' },
+  comida:        { emoji: '🍎', desc: 'Compro todo lo que el mar y la tierra dan, y vendo víveres.', color: '#f39c12' },
+  ropa:          { emoji: '👕', desc: 'Sastre local. Telas premium y ropa única para ti.',          color: '#9b59b6' },
+  herramientas:  { emoji: '⚒️', desc: 'Herrero de la isla. Herramientas avanzadas que aceleran tu trabajo.', color: '#7f8c8d' },
+  default:       { emoji: '🏪', desc: 'Buenos días, ¿qué buscas hoy?',                              color: '#3498db' },
 };
 
 const RESOURCE_META = {
   roca:   { icon: '🪨', label: 'Roca',   value: 5  },
   madera: { icon: '🪵', label: 'Madera', value: 4  },
   pez:    { icon: '🐟', label: 'Pez',    value: 6  },
+};
+
+const SHOP_ITEMS = {
+  comida: [
+    { id: 'manzana',   icon: '🍎', label: 'Manzana Jugosa',  price: 15, desc: 'Fruta dulce recién cosechada.', repeatable: true },
+    { id: 'zanahoria', icon: '🥕', label: 'Zanahoria Fresca', price: 10, desc: 'Crujiente y llena de vitaminas.', repeatable: true },
+    { id: 'pastel',    icon: '🍰', label: 'Pastel Especial',  price: 35, desc: 'Delicia horneada para celebrar.', repeatable: true }
+  ],
+  ropa: [
+    { id: 'sombrero', icon: '👒', label: 'Sombrero Playero', price: 45, desc: 'Protégete del sol con estilo.', repeatable: false },
+    { id: 'capa',     icon: '🧥', label: 'Abrigo Elegante',  price: 80, desc: 'Luce increíble en el metaverso.', repeatable: false },
+    { id: 'corona',   icon: '👑', label: 'Corona de Oro',    price: 150, desc: 'El accesorio de los reyes.', repeatable: false }
+  ],
+  herramientas: [
+    { id: 'hacha_hierro', icon: '🪓', label: 'Hacha Reforzada', price: 50, desc: 'Duplica madera y reduce cooldown 50%.', repeatable: false },
+    { id: 'pico_hierro',  icon: '⛏️', label: 'Pico de Acero',    price: 60, desc: 'Duplica rocas y reduce cooldown 50%.', repeatable: false },
+    { id: 'cana_hierro',  icon: '🎣', label: 'Caña Avanzada',   price: 70, desc: 'Duplica pesca y reduce cooldown 50%.', repeatable: false }
+  ]
 };
 
 AFRAME.registerComponent('shop', {
@@ -39,6 +57,7 @@ AFRAME.registerComponent('shop', {
   init() {
     this.isOpen    = false;
     this.isNearby  = false;
+    this.activeTab = 'buy';
     this.playerEl  = document.querySelector('#player');
     this.cfg       = SHOP_CONFIGS[this.data.type] || SHOP_CONFIGS.default;
     this.resources = this.data.accepts.split(',').map(s => s.trim()).filter(Boolean);
@@ -70,14 +89,21 @@ AFRAME.registerComponent('shop', {
           </div>
           <button class="shop-close" id="shop-close">✕</button>
         </div>
+
+        <!-- Barra de navegación de la tienda -->
+        <div class="shop-tabs" style="display: flex; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <button class="shop-tab active" id="shop-tab-buy" style="flex: 1; background: transparent; border: none; padding: 12px; color: #7ee8a2; font-weight: 700; font-size: 0.9rem; cursor: pointer; border-bottom: 2px solid #7ee8a2; outline: none; transition: all 0.2s;">🛍️ Comprar</button>
+          <button class="shop-tab" id="shop-tab-sell" style="flex: 1; background: transparent; border: none; padding: 12px; color: #aaa; font-weight: 600; font-size: 0.9rem; cursor: pointer; border-bottom: 2px solid transparent; outline: none; transition: all 0.2s;">💰 Vender</button>
+        </div>
+
         <div class="shop-body">
-          <div class="shop-section-title">💬 El vendedor dice (en señas):</div>
+          <div class="shop-section-title" id="shop-greeting-title">💬 El vendedor dice (en señas):</div>
           <div class="shop-dialog-emojis" id="shop-dialog-emojis">😊👋🤝</div>
-          <div class="shop-section-title">📦 Tus recursos</div>
+          <div class="shop-section-title" id="shop-section-title">✨ Artículos a la venta</div>
           <div class="shop-items" id="shop-items"></div>
           <div class="shop-footer">
             <span>Tu saldo: <strong id="shop-coins">0</strong> 💰</span>
-            <button class="shop-btn-all" id="shop-sell-all">Vender todo</button>
+            <button class="shop-btn-all" id="shop-sell-all" style="display: none;">Vender todo</button>
           </div>
         </div>
       </div>
@@ -91,6 +117,8 @@ AFRAME.registerComponent('shop', {
     document.getElementById('shop-close').addEventListener('click', () => this.close());
     document.getElementById('shop-overlay').addEventListener('click', () => this.close());
     document.getElementById('shop-sell-all').addEventListener('click', () => this._sellAll());
+    document.getElementById('shop-tab-buy').addEventListener('click', () => this._switchTab('buy'));
+    document.getElementById('shop-tab-sell').addEventListener('click', () => this._switchTab('sell'));
   },
 
   _injectShopStyles() {
@@ -109,10 +137,10 @@ AFRAME.registerComponent('shop', {
         position: fixed;
         top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        background: #1a1a2e;
+        background: #101025;
         border: 1px solid rgba(255,255,255,0.15);
         border-radius: 20px;
-        width: 420px;
+        width: 440px;
         max-width: 92vw;
         z-index: 501;
         overflow: hidden;
@@ -125,7 +153,6 @@ AFRAME.registerComponent('shop', {
         align-items: center;
         gap: 14px;
         padding: 20px 20px 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
       }
       .shop-emoji { font-size: 2.4rem; }
       .shop-name  { font-size: 1.1rem; font-weight: 700; }
@@ -155,14 +182,15 @@ AFRAME.registerComponent('shop', {
         text-align: center;
         background: rgba(255,255,255,0.04);
         border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.05);
       }
-      .shop-items  { display: flex; flex-direction: column; gap: 8px; }
+      .shop-items  { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; padding-right: 4px; }
       .shop-item {
         display: flex;
         align-items: center;
         gap: 12px;
         padding: 12px 14px;
-        background: rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.04);
         border-radius: 12px;
         border: 1px solid rgba(255,255,255,0.06);
       }
@@ -183,7 +211,7 @@ AFRAME.registerComponent('shop', {
       }
       .shop-item-btn:hover   { background: #2ecc71; transform: scale(1.04); }
       .shop-item-btn:active  { transform: scale(0.97); }
-      .shop-item-btn:disabled{ background: #555; cursor: default; transform: none; }
+      .shop-item-btn:disabled{ background: #444; color: #888; cursor: default; transform: none; }
       .shop-footer {
         display: flex;
         justify-content: space-between;
@@ -214,6 +242,7 @@ AFRAME.registerComponent('shop', {
   open() {
     if (this.isOpen) return;
     this.isOpen = true;
+    this.activeTab = 'buy'; // Siempre abre en comprar por defecto
 
     // Actualizar header con datos de esta tienda
     const header = document.getElementById('shop-header');
@@ -224,17 +253,18 @@ AFRAME.registerComponent('shop', {
       header.style.borderBottom = `1px solid ${this.cfg.color}40`;
     }
 
+    this._switchTab('buy');
     this.panel.style.display = 'block';
-    this._refreshItems();
 
     // Pausar movimiento del jugador
     const player = document.querySelector('#player');
     if (player) player.setAttribute('movement-controls', 'enabled', false);
+    
     // Liberar pointer lock
     document.exitPointerLock?.();
 
     window.dispatchEvent(new CustomEvent('game-message', {
-      detail: { text: `${this.cfg.emoji} Tienda abierta — [T] o [✕] para cerrar`, type: 'info' }
+      detail: { text: `${this.cfg.emoji} ${this.data.name} abierta — [T] para cerrar`, type: 'info' }
     }));
   },
 
@@ -248,38 +278,118 @@ AFRAME.registerComponent('shop', {
     if (player) player.setAttribute('movement-controls', 'enabled', true);
   },
 
+  _switchTab(tab) {
+    this.activeTab = tab;
+    const buyTab = document.getElementById('shop-tab-buy');
+    const sellTab = document.getElementById('shop-tab-sell');
+    const sellAllBtn = document.getElementById('shop-sell-all');
+    const sectionTitle = document.getElementById('shop-section-title');
+
+    if (!buyTab || !sellTab) return;
+
+    if (tab === 'buy') {
+      buyTab.style.color = '#7ee8a2';
+      buyTab.style.borderBottom = '2px solid #7ee8a2';
+      buyTab.style.fontWeight = '700';
+
+      sellTab.style.color = '#aaa';
+      sellTab.style.borderBottom = '2px solid transparent';
+      sellTab.style.fontWeight = '600';
+
+      if (sellAllBtn) sellAllBtn.style.display = 'none';
+      if (sectionTitle) sectionTitle.textContent = '✨ Artículos de la tienda';
+    } else {
+      sellTab.style.color = '#7ee8a2';
+      sellTab.style.borderBottom = '2px solid #7ee8a2';
+      sellTab.style.fontWeight = '700';
+
+      buyTab.style.color = '#aaa';
+      buyTab.style.borderBottom = '2px solid transparent';
+      buyTab.style.fontWeight = '600';
+
+      if (sellAllBtn) sellAllBtn.style.display = 'block';
+      if (sectionTitle) sectionTitle.textContent = '📦 Tus recursos para vender';
+    }
+
+    this._refreshItems();
+  },
+
   _refreshItems() {
     const container = document.getElementById('shop-items');
     const coinsEl   = document.getElementById('shop-coins');
     if (!container || !window.Inventory) return;
 
     coinsEl.textContent = window.Inventory.get('monedas');
-
     container.innerHTML = '';
-    this.resources.forEach(res => {
-      const meta = RESOURCE_META[res];
-      if (!meta) return;
-      const qty = window.Inventory.get(res);
 
-      const item = document.createElement('div');
-      item.className = 'shop-item';
-      item.innerHTML = `
-        <span class="shop-item-icon">${meta.icon}</span>
-        <div class="shop-item-info">
-          <div class="shop-item-name">${meta.label}</div>
-          <div class="shop-item-qty">Tienes: ${qty}</div>
-          <div class="shop-item-price">${meta.value} 💰 cada uno · Total: ${qty * meta.value} 💰</div>
-        </div>
-        <button class="shop-item-btn" ${qty === 0 ? 'disabled' : ''} data-res="${res}">
-          Vender
-        </button>
-      `;
-      item.querySelector('button').addEventListener('click', (e) => {
-        const r = e.target.dataset.res;
-        window.dispatchEvent(new CustomEvent('inventory-sell', { detail: { type: r } }));
+    if (this.activeTab === 'buy') {
+      const items = SHOP_ITEMS[this.data.type] || [];
+      if (items.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">No hay artículos a la venta en este puesto.</div>';
+        return;
+      }
+
+      items.forEach(item => {
+        const owned = window.Inventory.get(item.id);
+        const canBuy = window.Inventory.get('monedas') >= item.price;
+        const isUniqueAndOwned = !item.repeatable && owned >= 1;
+
+        const itemEl = document.createElement('div');
+        itemEl.className = 'shop-item';
+        itemEl.innerHTML = `
+          <span class="shop-item-icon">${item.icon}</span>
+          <div class="shop-item-info">
+            <div class="shop-item-name">${item.label} ${isUniqueAndOwned ? '✔️' : ''}</div>
+            <div class="shop-item-qty" style="color:#aaa; font-size:0.75rem; margin-top:2px;">${item.desc}</div>
+            <div class="shop-item-price" style="margin-top:4px;">${item.price} 💰 · ${item.repeatable && owned > 0 ? `Tienes: ${owned}` : isUniqueAndOwned ? 'Ya adquirido' : 'No tienes este ítem'}</div>
+          </div>
+          <button class="shop-item-btn" ${isUniqueAndOwned ? 'disabled' : !canBuy ? 'disabled' : ''} data-item="${item.id}">
+            ${isUniqueAndOwned ? 'Adquirido' : 'Comprar'}
+          </button>
+        `;
+        if (!isUniqueAndOwned && canBuy) {
+          itemEl.querySelector('button').addEventListener('click', () => this._buyItem(item));
+        }
+        container.appendChild(itemEl);
       });
-      container.appendChild(item);
-    });
+    } else {
+      this.resources.forEach(res => {
+        const meta = RESOURCE_META[res];
+        if (!meta) return;
+        const qty = window.Inventory.get(res);
+
+        const item = document.createElement('div');
+        item.className = 'shop-item';
+        item.innerHTML = `
+          <span class="shop-item-icon">${meta.icon}</span>
+          <div class="shop-item-info">
+            <div class="shop-item-name">${meta.label}</div>
+            <div class="shop-item-qty">Tienes: ${qty}</div>
+            <div class="shop-item-price">${meta.value} 💰 cada uno · Total: ${qty * meta.value} 💰</div>
+          </div>
+          <button class="shop-item-btn" ${qty === 0 ? 'disabled' : ''} data-res="${res}">
+            Vender
+          </button>
+        `;
+        item.querySelector('button').addEventListener('click', (e) => {
+          const r = e.target.dataset.res;
+          window.dispatchEvent(new CustomEvent('inventory-sell', { detail: { type: r } }));
+        });
+        container.appendChild(item);
+      });
+    }
+  },
+
+  _buyItem(item) {
+    if (!window.Inventory) return;
+    const success = window.Inventory.spend(item.price);
+    if (success) {
+      window.Inventory.add(item.id, 1);
+      window.dispatchEvent(new CustomEvent('game-message', {
+        detail: { text: `🛍️ Compraste ${item.icon} ${item.label} por ${item.price} 💰`, type: 'gold' }
+      }));
+      this._refreshItems();
+    }
   },
 
   _sellAll() {

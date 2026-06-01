@@ -91,34 +91,14 @@ AFRAME.registerComponent('npc-body', {
   },
   init() {
     const el = this.el;
-    const c  = this.data.color;
-    const hc = this.data.hatColor;
 
-    // Cuerpo
-    const body = document.createElement('a-box');
-    body.setAttribute('width', '0.5');
-    body.setAttribute('height', '0.8');
-    body.setAttribute('depth', '0.3');
-    body.setAttribute('color', c);
-    body.setAttribute('position', '0 0.4 0');
-    body.setAttribute('shadow', 'cast: true');
-    el.appendChild(body);
-
-    // Cabeza
-    const head = document.createElement('a-sphere');
-    head.setAttribute('radius', '0.22');
-    head.setAttribute('color', c);
-    head.setAttribute('position', '0 1.1 0');
-    head.setAttribute('shadow', 'cast: true');
-    el.appendChild(head);
-
-    // Sombrero
-    const hat = document.createElement('a-cylinder');
-    hat.setAttribute('radius', '0.24');
-    hat.setAttribute('height', '0.25');
-    hat.setAttribute('color', hc);
-    hat.setAttribute('position', '0 1.44 0');
-    el.appendChild(hat);
+    // Usar el modelo 3D GLTF del NPC cargado en assets
+    const model = document.createElement('a-entity');
+    model.setAttribute('gltf-model', '#npc-model');
+    model.setAttribute('position', '0 0 0');
+    model.setAttribute('scale', '0.9 0.9 0.9'); // Escala ideal para el modelo npc1.glb
+    model.setAttribute('shadow', 'cast: true; receive: true');
+    el.appendChild(model);
 
     // Animación de idle (leve balanceo)
     el.setAttribute('animation', {
