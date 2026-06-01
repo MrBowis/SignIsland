@@ -192,10 +192,12 @@ AFRAME.registerComponent('npc-dialog', {
 
   /**
    * Tecla E: avanza manualmente en la secuencia cuando está cerca.
+   * El pizarrón de la academia tiene prioridad sobre el diálogo del NPC.
    */
   _onKeyDown(e) {
     if (e.key !== 'e' && e.key !== 'E') return;
     if (!this.isNearby) return;
+    if (window.academiaOpen) return;
     this.msgIndex = (this.msgIndex + 1) % this.messages.length;
     if (this.emojiEl) {
       this.emojiEl.setAttribute('value', this.messages[this.msgIndex]);

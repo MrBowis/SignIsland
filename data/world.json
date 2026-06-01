@@ -119,7 +119,7 @@
     },
     {
       "id": 3,
-      "word": "¿Cómo está?",
+      "word": "¿Como esta?",
       "emoji": "👋",
       "description": "Mueve la mano de forma abierta y describe el gesto de saludo formal.",
       "handshape": "🤚",
@@ -128,7 +128,7 @@
       "youtubeId": "aB4nMgDQyes",
       "source": "Diccionario Gabriel Román — CONADIS Ecuador",
       "sourceUrl": "http://www.plataformaconadis.gob.ec/~platafor/diccionario/?st_kb=como-esta",
-      "options": ["¿Cómo está?", "Hasta luego", "Buenos días", "Por favor"],
+      "options": ["¿Como esta?", "Hasta luego", "Buenos días", "Por favor"],
       "correct": 0
     },
     {

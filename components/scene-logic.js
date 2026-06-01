@@ -29,13 +29,7 @@ const MINIMAP_SIZE = 100;   // px del canvas
 
 // Puntos de interés del mundo (coordenadas del mundo → minimap)
 const POI = [
-  { x: 0, z: -20, icon: '🏛', color: '#e8d5b0', label: 'Academia' },
-  { x: -25, z: -5, icon: '🍎', color: '#f39c12', label: 'Comida' },
-  { x: 25, z: -5, icon: '👕', color: '#9b59b6', label: 'Ropa' },
-  { x: -25, z: -25, icon: '⚒️', color: '#7f8c8d', label: 'Herrería' },
-  { x: 30, z: -30, icon: '🪨', color: '#95a5a6', label: 'Rocas' },
-  { x: -35, z: -30, icon: '🌲', color: '#27ae60', label: 'Madera' },
-  { x: 0, z: 30, icon: '🐟', color: '#2980b9', label: 'Pesca' },
+  { x: 0, z: -17, icon: '🏛', color: '#e8d5b0', label: 'Academia' },
 ];
 
 function worldToMinimap(wx, wz) {
