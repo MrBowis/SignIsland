@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignIsland 🏝️ — Aprende Lengua de Señas</title>
+
+  <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.0/dist/aframe-extras.min.js"></script>
+  <script src="https://unpkg.com/aframe-environment-component/dist/aframe-environment-component.min.js"></script>
+
+  <!-- Fases 1 y 2 -->
+  <script src="components/npc-dialog.js"></script>
+  <script src="components/world-builder.js"></script>
+  <!-- Fases 3 y 4 — NUEVOS -->
+  <script src="components/inventory.js"></script>
+  <script src="components/farming.js"></script>
+  <script src="components/shop.js"></script>
+  <script src="components/alphabet-lsec.js"></script>
+  <script src="components/sign-lesson.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 100;
+      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+    }
+
+    #instructions {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #0a1628;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.8s ease;
+      font-family: 'Segoe UI Emoji', sans-serif;
+    }
+
+    #loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #loading-screen h1 {
+      color: #7ee8a2;
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+
+    #loading-screen p {
+      color: #aaa;
+      font-size: 1rem;
+      margin-bottom: 32px;
+    }
+
+    .loader-bar {
+      width: 220px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .loader-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7ee8a2, #38bdf8);
+      border-radius: 4px;
+      animation: load 2s ease forwards;
+    }
+
+    @keyframes load {
+      from {
+        width: 0%;
+      }
+
+      to {
+        width: 100%;
+      }
+    }
+
+    #npc-hint {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    #npc-hint.visible {
+      opacity: 1;
+    }
+
+    #minimap {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 120px;
+      height: 120px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #aaa;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: none;
+    }
+
+    #minimap canvas {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loading-screen">
+    <h1>🏝️ SignIsland</h1>
+    <p>Bienvenido a la isla donde todos hablan con las manos</p>
+    <div class="loader-bar">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="instructions">
+      WASD mover &nbsp;·&nbsp; E hablar NPC &nbsp;·&nbsp; F farmear &nbsp;·&nbsp; T tienda &nbsp;·&nbsp; L academia
+    </div>
+    <div id="npc-hint">👆 Presiona <strong>E</strong> para hablar</div>
+    <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
+    <!-- inventory-hud se inyecta por inventory.js -->
+  </div>
+
+  <a-scene keyboard-shortcuts="enterVR: false"
+    renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true" shadow="type: pcfsoft"
+    fog="type: exponential; color: #b8d4f0; density: 0.012"
+    loading-screen="dotsColor: #7ee8a2; backgroundColor: #0a1628">
+
+    <a-assets timeout="10000">
+      <audio id="ambient-ocean" src="assets/audio/ocean.mp3" preload="auto" loop></audio>
+    </a-assets>
+
+    <a-entity environment="
+      preset: forest; groundColor: #5a8a3c; groundColor2: #3d6b28;
+      grid: none; skyType: gradient; skyColor: #87ceeb; horizonColor: #b8e4f9;
+      fog: 0.6; flatShading: false; playArea: 1; dressing: trees;
+      dressingAmount: 60; dressingColor: #2d5a1b; dressingScale: 1.2;
+      shadow: true; shadowSize: 10; lighting: distant; lightPosition: 1 1 -0.5
+    "></a-entity>
+
+    <a-light type="ambient" color="#c8e8ff" intensity="0.6"></a-light>
+    <a-light type="directional" color="#fff5e0" intensity="1.2" position="30 60 -20" cast-shadow="true"
+      shadow-camera-left="-80" shadow-camera-right="80" shadow-camera-top="80" shadow-camera-bottom="-80">
+    </a-light>
+
+    <a-plane id="ground" rotation="-90 0 0" width="120" height="120" color="#5a8a3c" shadow="receive: true"
+      static-body></a-plane>
+    <a-ring rotation="-90 0 0" position="0 0.01 0" radius-inner="55" radius-outer="70" color="#e8c87a"
+      shadow="receive: true"></a-ring>
+    <a-plane rotation="-90 0 0" position="0 -0.5 0" width="300" height="300" color="#1a6fa8" opacity="0.85"></a-plane>
+
+
+    <!-- ═══════════ ACADEMIA (Fase 4) ═══════════ -->
+    <a-entity id="academia-building" position="0 0 -20">
+      <a-box width="16" height="10" depth="14" color="#e8d5b0" shadow="cast: true; receive: true"
+        position="0 5 0"></a-box>
+      <a-cone radius-bottom="11" radius-top="0" height="5" color="#c0392b" shadow="cast: true"
+        position="0 12.5 0"></a-cone>
+      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="-5 5 7" shadow="cast: true"></a-cylinder>
+      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="-2 5 7" shadow="cast: true"></a-cylinder>
+      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="2 5 7" shadow="cast: true"></a-cylinder>
+      <a-cylinder radius="0.4" height="10" color="#f0e8d0" position="5 5 7" shadow="cast: true"></a-cylinder>
+      <a-box width="2.5" height="4" depth="0.3" color="#8b5e3c" position="0 2 7.05" shadow="cast: true"></a-box>
+      <a-box width="2" height="2" depth="0.2" color="#87ceeb" opacity="0.7" position="-5 6 7.1"></a-box>
+      <a-box width="2" height="2" depth="0.2" color="#87ceeb" opacity="0.7" position="5 6 7.1"></a-box>
+      <a-text value="🏛️ ACADEMIA DE SEÑAS" align="center" color="#2c1810" width="10" position="0 11 7.2"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+      <!-- Trigger academia con componente academia (Fase 4) -->
+      <a-entity academia="range: 10" position="0 1 9" geometry="primitive: box; width: 3; height: 3; depth: 0.1"
+        material="opacity: 0"></a-entity>
+      <!-- NPC dialogo de bienvenida -->
+      <a-entity npc-dialog="name: Academia; emojis: 🏛️👋,📚✋,🎓👐,✨🤝; label: Secretaria; color: #e8d5b0"
+        position="3 1 9" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
+      <!-- NPC cuerpo 3D (visible) -->
+      <a-npc-body color="#e8d5b0" hat-color="#c0392b" position="3 0 9"></a-npc-body>
+    </a-entity>
+
+
+    <!-- ═══════════ TIENDA COMIDA (Fase 3) ═══════════ -->
+    <a-entity id="tienda-comida" position="-25 0 -5">
+      <a-box width="8" height="5" depth="8" color="#f39c12" shadow="cast: true; receive: true"
+        position="0 2.5 0"></a-box>
+      <a-box width="10" height="0.5" depth="10" color="#e67e22" position="0 5.2 0" shadow="cast: true"></a-box>
+      <a-box width="2" height="3" depth="0.2" color="#8b5e3c" position="0 1.5 4.1"></a-box>
+      <a-entity position="0 5.5 3">
+        <a-box width="10" height="0.2" depth="3" color="#e74c3c" rotation="20 0 0"></a-box>
+      </a-entity>
+      <a-text value="🍎 COMIDA" align="center" color="#fff" width="6" position="0 5.8 4.2"></a-text>
+      <!-- NPC diálogo -->
+      <a-entity npc-dialog="name: Tienda Comida; emojis: 🍎😊,🥕💰,🐟🍳,😋👍; label: Vendedor de comida; color: #f39c12"
+        position="-2 1 3.5" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
+      <!-- NPC cuerpo 3D (visible) -->
+      <a-npc-body color="#f39c12" hat-color="#e67e22" position="-2 0 3.5"></a-npc-body>
+      <!-- Trigger de tienda (Fase 3) -->
+      <a-entity shop="type: comida; name: Tienda de Comida; accepts: pez,roca,madera" position="0 1 3.5"
+        geometry="primitive: box; width: 4; height: 3; depth: 2" material="opacity: 0"></a-entity>
+    </a-entity>
+
+
+    <!-- ═══════════ TIENDA ROPA (Fase 3) ═══════════ -->
+    <a-entity id="tienda-ropa" position="25 0 -5">
+      <a-box width="8" height="6" depth="8" color="#9b59b6" shadow="cast: true; receive: true" position="0 3 0"></a-box>
+      <a-box width="9" height="0.4" depth="9" color="#8e44ad" position="0 6.2 0"></a-box>
+      <a-box width="2" height="3.5" depth="0.2" color="#6c3483" position="0 1.75 4.1"></a-box>
+      <a-text value="👕 ROPA" align="center" color="#fff" width="6" position="0 6.8 4.2"></a-text>
+      <a-cylinder radius="0.15" height="1.5" color="#d5d8dc" position="-2 0.75 3" shadow="cast: true"></a-cylinder>
+      <a-sphere radius="0.25" color="#d5d8dc" position="-2 1.6 3"></a-sphere>
+      <a-cylinder radius="0.15" height="1.5" color="#d5d8dc" position="2 0.75 3" shadow="cast: true"></a-cylinder>
+      <a-sphere radius="0.25" color="#d5d8dc" position="2 1.6 3"></a-sphere>
+      <a-entity npc-dialog="name: Tienda Ropa; emojis: 👕✨,💜😊,👗💰,🛍️👍; label: Diseñadora de moda; color: #9b59b6"
+        position="-2 1 3.5" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
+      <!-- NPC cuerpo 3D (visible) -->
+      <a-npc-body color="#9b59b6" hat-color="#8e44ad" position="-2 0 3.5"></a-npc-body>
+      <a-entity shop="type: ropa; name: Tienda de Ropa; accepts: madera,roca" position="0 1 3.5"
+        geometry="primitive: box; width: 4; height: 3; depth: 2" material="opacity: 0"></a-entity>
+    </a-entity>
+
+
+    <!-- ═══════════ TIENDA HERRAMIENTAS (Fase 3) ═══════════ -->
+    <a-entity id="tienda-herramientas" position="-25 0 -25">
+      <a-box width="9" height="5.5" depth="8" color="#7f8c8d" shadow="cast: true; receive: true"
+        position="0 2.75 0"></a-box>
+      <a-box width="10" height="0.5" depth="9" color="#636e72" position="0 5.8 0"></a-box>
+      <a-box width="2.2" height="3.5" depth="0.2" color="#4a4a4a" position="0 1.75 4.1"></a-box>
+      <a-text value="⚒️ HERRAMIENTAS" align="center" color="#f1c40f" width="7" position="0 6.3 4.2"></a-text>
+      <a-entity npc-dialog="name: Tienda Herramientas; emojis: ⚒️😐,🪓💰,⛏️👍,🔨✅; label: Herrero; color: #7f8c8d"
+        position="-2 1 3.5" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
+      <!-- NPC cuerpo 3D (visible) -->
+      <a-npc-body color="#7f8c8d" hat-color="#636e72" position="-2 0 3.5"></a-npc-body>
+      <a-entity shop="type: herramientas; name: Herrería; accepts: roca,madera" position="0 1 3.5"
+        geometry="primitive: box; width: 4; height: 3; depth: 2" material="opacity: 0"></a-entity>
+    </a-entity>
+
+
+    <!-- ═══════════ ZONA ROCAS — farmeable (Fase 3) ═══════════ -->
+    <a-entity id="zona-rocas" position="30 0 -30">
+      <a-text value="🪨 ZONA DE ROCAS" align="center" color="#95a5a6" width="8" position="0 4 0"></a-text>
+      <!-- Rocas clickeables -->
+      <a-sphere radius="1.5" color="#95a5a6" position="0 1 0" shadow="cast: true; receive: true"
+        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-sphere>
+      <a-sphere radius="1.0" color="#7f8c8d" position="2.5 0.7 1" shadow="cast: true"
+        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-sphere>
+      <a-sphere radius="1.2" color="#aab0b5" position="-2 0.8 -1" shadow="cast: true"
+        farmeable="type: roca; amount: 1; cooldown: 5000; range: 6" class="farmeable-obj"></a-sphere>
+      <!-- NPC guardián -->
+      <a-entity npc-dialog="name: Zona Rocas; emojis: 🪨⛏️,💪😤,🪨💰,✅😊; label: Minero guardián; color: #95a5a6"
+        position="4 1 0" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
+      <!-- NPC cuerpo 3D (visible) -->
+      <a-npc-body color="#95a5a6" hat-color="#7f8c8d" position="4 0 0"></a-npc-body>
+    </a-entity>
+
+
+    <!-- ═══════════ ZONA MADERA — farmeable (Fase 3) ═══════════ -->
+    <a-entity id="zona-madera" position="-35 0 -30">
+      <a-text value="🌲 BOSQUE DE MADERA" align="center" color="#27ae60" width="9" position="0 6 0"></a-text>
+      <!-- Árbol 1 — farmeable en el tronco -->
+      <a-entity position="0 0 0">
+        <a-cylinder radius="0.4" height="5" color="#8B4513" position="0 2.5 0" shadow="cast: true"
+          farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-cylinder>
+        <a-cone radius-bottom="2.5" radius-top="0" height="4" color="#27ae60" position="0 7 0"
+          shadow="cast: true"></a-cone>
+      </a-entity>
+      <!-- Árbol 2 -->
+      <a-entity position="3 0 -2">
+        <a-cylinder radius="0.35" height="4.5" color="#7a3b11" position="0 2.25 0" shadow="cast: true"
+          farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-cylinder>
+        <a-cone radius-bottom="2.2" radius-top="0" height="3.5" color="#2ecc71" position="0 6 0"
+          shadow="cast: true"></a-cone>
+      </a-entity>
+      <!-- Árbol 3 -->
+      <a-entity position="-3 0 1">
+        <a-cylinder radius="0.45" height="5.5" color="#6b3010" position="0 2.75 0" shadow="cast: true"
+          farmeable="type: madera; amount: 1; cooldown: 6000; range: 6" class="farmeable-obj"></a-cylinder>
+        <a-cone radius-bottom="2.8" radius-top="0" height="4.5" color="#1e8449" position="0 7.5 0"
+          shadow="cast: true"></a-cone>
+      </a-entity>
+      <a-entity npc-dialog="name: Zona Madera; emojis: 🌲🪓,💪🌳,🪵💰,😊👍; label: Guardabosque; color: #27ae60"
+        position="5 1 0" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
+      <!-- NPC cuerpo 3D (visible) -->
+      <a-npc-body color="#27ae60" hat-color="#2ecc71" position="5 0 0"></a-npc-body>
+    </a-entity>
+
+
+    <!-- ═══════════ ZONA PESCA — farmeable (Fase 3) ═══════════ -->
+    <a-entity id="zona-pesca" position="0 0 30">
+      <a-text value="🐟 ZONA DE PESCA" align="center" color="#2980b9" width="8" position="0 3 0"></a-text>
+      <!-- Embarcadero -->
+      <a-box width="3" height="0.3" depth="8" color="#8b6914" position="0 0.15 0"
+        shadow="cast: true; receive: true"></a-box>
+      <a-cylinder radius="0.15" height="2" color="#7a5c10" position="-1.2 0 -3" shadow="cast: true"></a-cylinder>
+      <a-cylinder radius="0.15" height="2" color="#7a5c10" position="1.2 0 -3" shadow="cast: true"></a-cylinder>
+      <a-cylinder radius="0.15" height="2" color="#7a5c10" position="-1.2 0 3" shadow="cast: true"></a-cylinder>
+      <a-cylinder radius="0.15" height="2" color="#7a5c10" position="1.2 0 3" shadow="cast: true"></a-cylinder>
+      <!-- Punto de pesca clickeable (el agua frente al embarcadero) -->
+      <a-cylinder radius="2" height="0.1" color="#1a6fa8" opacity="0.6" position="0 0.05 4"
+        farmeable="type: pez; amount: 1; cooldown: 7000; range: 7" class="farmeable-obj"></a-cylinder>
+      <a-entity npc-dialog="name: Zona Pesca; emojis: 🎣😊,🐟💰,🌊😌,🎣👍; label: Pescador; color: #2980b9"
+        position="0 1 -2" geometry="primitive: box; width: 1.5; height: 2; depth: 1" material="opacity: 0"></a-entity>
+      <!-- NPC cuerpo 3D (visible) -->
+      <a-npc-body color="#2980b9" hat-color="#1a6fa8" position="0 0 -2"></a-npc-body>
+    </a-entity>
+
+
+    <!-- ═══════════ CAMINOS Y PLAZA ═══════════ -->
+    <a-box width="4" height="0.05" depth="60" color="#c8b89a" position="0 0.03 0" shadow="receive: true"></a-box>
+    <a-box width="60" height="0.05" depth="4" color="#c8b89a" position="0 0.03 -10" shadow="receive: true"></a-box>
+    <a-cylinder radius="8" height="0.06" color="#d4c5a9" position="0 0.04 -10" shadow="receive: true"></a-cylinder>
+
+    <a-entity position="0 0 -10">
+      <a-cylinder radius="2.5" height="0.5" color="#bdc3c7" shadow="cast: true; receive: true"></a-cylinder>
+      <a-cylinder radius="0.2" height="2" color="#95a5a6" position="0 1.5 0" shadow="cast: true"></a-cylinder>
+      <a-sphere radius="0.4" color="#3498db" opacity="0.8" position="0 2.5 0"
+        animation="property: position; to: 0 2.8 0; dur: 2000; easing: easeInOutSine; loop: true; dir: alternate"></a-sphere>
+    </a-entity>
+
+    <a-entity id="farolas">
+      <a-entity farola position="8 0 -10"></a-entity>
+      <a-entity farola position="-8 0 -10"></a-entity>
+      <a-entity farola position="0 0 -18"></a-entity>
+      <a-entity farola position="0 0 -2"></a-entity>
+      <a-entity farola position="12 0 -20"></a-entity>
+      <a-entity farola position="-12 0 -20"></a-entity>
+    </a-entity>
+
+    <a-entity position="0 0 10">
+      <a-cylinder radius="0.15" height="5" color="#8b5e3c" position="-3 2.5 0" shadow="cast: true"></a-cylinder>
+      <a-cylinder radius="0.15" height="5" color="#8b5e3c" position="3 2.5 0" shadow="cast: true"></a-cylinder>
+      <a-box width="7" height="1.8" depth="0.2" color="#d4a855" position="0 4.5 0" shadow="cast: true"></a-box>
+      <a-text value="🏝️ BIENVENIDO A SIGNISLAND" align="center" color="#2c1810" width="7"
+        position="0 4.5 0.2"></a-text>
+    </a-entity>
+
+
+    <!-- ═══════════ JUGADOR ═══════════ -->
+    <a-entity id="player" position="0 0 10" movement-controls="speed: 0.12; fly: false; constrainToNavMesh: false">
+      <a-camera id="camera" position="0 0.75 0" look-controls="pointerLockEnabled: true" wasd-controls="enabled: false">
+        <a-entity cursor="rayOrigin: mouse; fuse: false"
+          raycaster="objects: .farmeable-obj, [npc-dialog]; near: 0; far: 7" position="0 0 -1"
+          geometry="primitive: ring; radiusInner: 0.008; radiusOuter: 0.013"
+          material="color: white; shader: flat; opacity: 0.8"></a-entity>
+      </a-camera>
+    </a-entity>
+
+  </a-scene>
+
+  <script src="components/scene-logic.js"></script>
+</body>
+
+</html>
