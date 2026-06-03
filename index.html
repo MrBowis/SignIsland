@@ -10,6 +10,11 @@
     <!-- Raycast acelerado para colisiones contra la malla del escenario -->
     <script src="https://unpkg.com/three-mesh-bvh@0.7.8/build/index.umd.cjs"></script>
 
+    <!-- Nombre único del jugador, compartido por todos los componentes -->
+    <script>
+      window.PLAYER_NAME = 'Isleño-' + Math.floor(1000 + Math.random() * 9000);
+    </script>
+
     <script src="components/npc-dialog.js"></script>
     <script src="components/world-builder.js"></script>
     <script src="components/inventory.js"></script>
@@ -230,7 +235,7 @@
     <div id="hud">
       <div id="instructions">
         WASD mover &nbsp;·&nbsp; Shift correr &nbsp;·&nbsp; Q cambiar vista
-        &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; T chat &nbsp;·&nbsp; G rejilla
+        &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; B emotes &nbsp;·&nbsp; T chat &nbsp;·&nbsp; G rejilla
         &nbsp;·&nbsp; Esc cerrar
       </div>
 
@@ -294,23 +299,25 @@
 
     <!-- Template del avatar remoto (multijugador NAF) -->
     <template id="avatar-template">
-      <a-entity>
+      <a-entity player-info follow-rotation>
+        <!-- Modelo del personaje remoto -->
         <a-entity
+          class="avatar-anim"
           gltf-model="#character-model"
-          animation-mixer="clip: Walk; loop: repeat; crossFadeDuration: 0.3"
+          animation-mixer="clip: Idle; loop: repeat; crossFadeDuration: 0.3"
           scale="1 1 1"
           shadow="cast: true"
-        >
-        </a-entity>
+        ></a-entity>
+        <!-- Nombre sobre la cabeza -->
         <a-text
-          value="???"
+          class="avatar-name"
+          value="Jugador"
           position="0 2.4 0"
           align="center"
           color="#fff"
           width="3"
           shader="flat"
-        >
-        </a-text>
+        ></a-text>
         <a-entity networked-audio-source></a-entity>
       </a-entity>
     </template>
@@ -327,10 +334,11 @@
     "
       renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
       shadow="type: pcfsoft"
-      fog="type: exponential; color: #b8d4f0; density: 0.012"
+      fog="type: exponential; color: #0a1020; density: 0.014"
       loading-screen="dotsColor: #7ee8a2; backgroundColor: #0a1628"
     >
-      <a-assets timeout="30000">
+      <!-- timeout alto: scene.glb pesa ~127 MB y por WiFi tarda en otros equipos -->
+      <a-assets timeout="600000">
         <a-asset-item
           id="scene-model"
           src="assets/models/scene.glb"
@@ -341,15 +349,44 @@
         ></a-asset-item>
       </a-assets>
 
-      <!-- Cielo simple (el escenario lo aporta scene.glb) -->
-      <a-sky color="#b8e4f9"></a-sky>
+      <!-- Cielo nocturno -->
+      <a-sky color="#060a18"></a-sky>
 
-      <a-light type="ambient" color="#c8e8ff" intensity="0.6"></a-light>
+      <!-- Campo de estrellas procedural -->
+      <a-entity starry-sky></a-entity>
+
+      <!-- Luna -->
+      <a-sphere
+        position="180 260 -500"
+        radius="18"
+        color="#e8e4d0"
+        shader="flat"
+        emissive="#c8c4b0"
+        emissive-intensity="0.4"
+        segments-height="16"
+        segments-width="16"
+      ></a-sphere>
+
+      <!-- Halo suave alrededor de la luna -->
+      <a-sphere
+        position="180 260 -500"
+        radius="26"
+        color="#8090b0"
+        shader="flat"
+        material="transparent: true; opacity: 0.08; side: back"
+        segments-height="8"
+        segments-width="8"
+      ></a-sphere>
+
+      <!-- Luz ambiental nocturna -->
+      <a-light type="ambient" color="#3a4f70" intensity="1.1"></a-light>
+
+      <!-- Luz de luna -->
       <a-light
         type="directional"
-        color="#fff5e0"
-        intensity="1.2"
-        position="30 60 -20"
+        color="#c8dcff"
+        intensity="0.9"
+        position="180 260 -500"
         cast-shadow="true"
         shadow-camera-left="-80"
         shadow-camera-right="80"
@@ -372,7 +409,7 @@
 
       <!-- Plano cartesiano de referencia (rejilla + ejes X/Y/Z).
            Alterna desde código con toggleGrid() o con la tecla G. -->
-      <a-entity id="grid" cartesian-grid visible="true"></a-entity>
+      <a-entity id="grid" cartesian-grid visible="false"></a-entity>
 
       <!-- ═══════════ ACADEMIA ═══════════ -->
       <a-entity id="academia-building" position="0 0 -20">
@@ -428,13 +465,15 @@
       <!-- ═══════════ JUGADOR ═══════════ -->
       <a-entity
         id="player"
-        position="-50 0 -15"
+        position="-43.8 0 -3"
         player-avatar
+        player-info
         networked="template: #avatar-template; attachTemplateToLocal: false"
       >
         <!-- Modelo 3D del personaje — oculto en 1ra persona, visible en 3ra -->
         <a-entity
           id="player-model"
+          class="avatar-anim"
           gltf-model="#character-model"
           animation-mixer="clip: Idle; loop: repeat; crossFadeDuration: 0.3"
           position="0 0 0"
@@ -471,5 +510,46 @@
     </a-scene>
 
     <script src="components/scene-logic.js"></script>
+
+    <script>
+      AFRAME.registerComponent('starry-sky', {
+        init() {
+          const COUNT = 3500;
+          const positions = new Float32Array(COUNT * 3);
+          const colors    = new Float32Array(COUNT * 3);
+
+          for (let i = 0; i < COUNT; i++) {
+            let x, y, z, len;
+            do {
+              x = (Math.random() - 0.5) * 2;
+              y = Math.random();
+              z = (Math.random() - 0.5) * 2;
+              len = Math.sqrt(x * x + y * y + z * z);
+            } while (len < 0.01);
+
+            const R = 950;
+            positions[i * 3]     = (x / len) * R;
+            positions[i * 3 + 1] = (y / len) * R;
+            positions[i * 3 + 2] = (z / len) * R;
+
+            colors[i * 3] = 1.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0;
+          }
+
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+
+          const mat = new THREE.PointsMaterial({
+            size: 3.0,
+            vertexColors: true,
+            transparent: true,
+            opacity: 1.0,
+            sizeAttenuation: false,
+          });
+
+          this.el.object3D.add(new THREE.Points(geo, mat));
+        },
+      });
+    </script>
   </body>
 </html>

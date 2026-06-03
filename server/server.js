@@ -11,7 +11,31 @@ const PORT   = process.env.PORT || 3025;
 
 app.use(express.static(path.join(__dirname, '..')));
 
-// NAF socket.io signaling protocol
+/**
+ * Señalización NAF (adaptador "socketio" de networked-aframe).
+ * Protocolo real del adaptador:
+ *   Cliente → Servidor:
+ *     joinRoom  { room }
+ *     send      { from, to, type, data }   (mensaje dirigido a un cliente)
+ *     broadcast { from, type, data }       (mensaje a toda la sala)
+ *   Servidor → Cliente:
+ *     connectSuccess   { joinedTime }
+ *     occupantsChanged { occupants }       ({ socketId: joinTime, … })
+ *     send / broadcast { from, type, data }
+ *
+ * El cliente usa su propio socket.id como clientId (lo toma del evento
+ * 'connect' nativo), por eso aquí también identificamos a cada jugador por
+ * socket.id.
+ */
+
+// Mapa de ocupantes por sala: room → { socketId: joinTime }
+const nafRooms = Object.create(null);
+
+function emitOccupants(room) {
+  const occupants = nafRooms[room] || {};
+  io.to(room).emit('occupantsChanged', { occupants });
+}
+
 io.on('connection', socket => {
   const ts = () => new Date().toLocaleTimeString();
   let joinedRoom = null;
@@ -19,44 +43,33 @@ io.on('connection', socket => {
 
   console.log(`[${ts()}] + conectado    ${socket.id}`);
 
+  // ─── NAF: unirse a la sala ──────────────────────────────────────────────
   socket.on('joinRoom', ({ room }) => {
     joinedRoom = room;
     socket.join(room);
 
-    // Occupants already in the room (excluding self)
-    const occupants = {};
-    const roomSockets = io.sockets.adapter.rooms.get(room);
-    if (roomSockets) {
-      roomSockets.forEach(id => {
-        if (id !== socket.id) occupants[id] = true;
-      });
-    }
+    if (!nafRooms[room]) nafRooms[room] = Object.create(null);
+    nafRooms[room][socket.id] = Date.now();
 
-    socket.emit('connectSuccess', { clientId: socket.id });
-    socket.emit('roomOccupants', { occupants });
-    socket.to(room).emit('clientConnected', { clientId: socket.id });
+    // Confirmar al recién llegado y avisar a toda la sala (cada cliente se
+    // elimina a sí mismo del mapa de ocupantes).
+    socket.emit('connectSuccess', { joinedTime: nafRooms[room][socket.id] });
+    emitOccupants(room);
 
-    console.log(`[${ts()}]   entró sala "${room}" (${roomSockets?.size ?? 1} jugadores)`);
+    const n = Object.keys(nafRooms[room]).length;
+    console.log(`[${ts()}]   entró sala "${room}" (${n} jugador${n !== 1 ? 'es' : ''})`);
   });
 
-  socket.on('sendData', ({ clientId, dataType, data }) => {
-    if (!joinedRoom) return;
-    io.to(clientId).emit('receiveData', { clientId: socket.id, dataType, data });
+  // ─── NAF: mensaje dirigido a un cliente concreto ────────────────────────
+  socket.on('send', (packet) => {
+    if (!packet || !packet.to) return;
+    io.to(packet.to).emit('send', packet);
   });
 
-  socket.on('sendDataGuaranteed', ({ clientId, dataType, data }) => {
-    if (!joinedRoom) return;
-    io.to(clientId).emit('receiveDataGuaranteed', { clientId: socket.id, dataType, data });
-  });
-
-  socket.on('broadcast', ({ dataType, data }) => {
-    if (!joinedRoom) return;
-    socket.to(joinedRoom).emit('receiveData', { clientId: socket.id, dataType, data });
-  });
-
-  socket.on('broadcastDataGuaranteed', ({ dataType, data }) => {
-    if (!joinedRoom) return;
-    socket.to(joinedRoom).emit('receiveDataGuaranteed', { clientId: socket.id, dataType, data });
+  // ─── NAF: mensaje a todos los demás de la sala ──────────────────────────
+  socket.on('broadcast', (packet) => {
+    if (!joinedRoom || !packet) return;
+    socket.to(joinedRoom).emit('broadcast', packet);
   });
 
   // ─── Chat de texto (independiente de NAF) ───────────────────────────────
@@ -74,8 +87,13 @@ io.on('connection', socket => {
   });
 
   socket.on('disconnect', () => {
-    if (joinedRoom) {
-      socket.to(joinedRoom).emit('clientDisconnected', { clientId: socket.id });
+    if (joinedRoom && nafRooms[joinedRoom]) {
+      delete nafRooms[joinedRoom][socket.id];
+      if (Object.keys(nafRooms[joinedRoom]).length === 0) {
+        delete nafRooms[joinedRoom];
+      } else {
+        emitOccupants(joinedRoom);   // los demás retiran el avatar saliente
+      }
     }
     console.log(`[${ts()}] - desconectado ${socket.id}`);
   });

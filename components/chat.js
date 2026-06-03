@@ -11,7 +11,7 @@
  */
 (function () {
   const ROOM = 'signisland-island';
-  const NAME = 'Isleño-' + Math.floor(1000 + Math.random() * 9000);
+  const NAME = window.PLAYER_NAME || ('Isleño-' + Math.floor(1000 + Math.random() * 9000));
   const FADE_MS = 3000;
 
   let chatEl, logEl, inputEl;

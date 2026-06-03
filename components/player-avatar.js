@@ -8,6 +8,7 @@
  *  - Cámara en 1ra / 3ra persona (Q). En 3ra persona la cámara orbita con
  *    look-controls (#cam-pivot) y el modelo gira para dar la espalda a la
  *    cámara mientras se mueve.
+ *  - Emotes (B): selector de bailes con GangnamStyle, Moonwalk, SnakeDance, Thriller.
  */
 AFRAME.registerComponent('player-avatar', {
   schema: {
@@ -25,6 +26,17 @@ AFRAME.registerComponent('player-avatar', {
     this.isRunning     = false;
     this.isThirdPerson = false;
     this.chatOpen      = false;
+    this.isEmoting     = false;
+    this.emoteOpen     = false;
+
+    this._emotes = [
+      { clip: 'GangnamStyle', label: 'Gangnam Style', icon: '🐎' },
+      { clip: 'Moonwalk',     label: 'Moonwalk',      icon: '🌙' },
+      { clip: 'SnakeDance',   label: 'Snake Dance',   icon: '🐍' },
+      { clip: 'Thriller',     label: 'Thriller',      icon: '🧟' },
+    ];
+
+    this._buildEmoteUI();
 
     this.camPivot    = document.getElementById('cam-pivot');
     this.cameraEl    = document.getElementById('camera');
@@ -47,6 +59,90 @@ AFRAME.registerComponent('player-avatar', {
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup',   this._onKeyUp);
     window.addEventListener('signisland-chat', this._onChat);
+  },
+
+  /* ─── UI del selector de emotes ────────────────────────────────────────── */
+  _buildEmoteUI() {
+    const panel = document.createElement('div');
+    panel.id = 'emote-picker';
+    panel.style.cssText = `
+      position: fixed;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      gap: 12px;
+      z-index: 300;
+      pointer-events: auto;
+    `;
+
+    this._emotes.forEach((emote, i) => {
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        background: rgba(0,0,0,0.72);
+        backdrop-filter: blur(10px);
+        border: 1.5px solid rgba(255,255,255,0.18);
+        border-radius: 16px;
+        color: #fff;
+        padding: 14px 18px;
+        cursor: pointer;
+        font-family: "Segoe UI Emoji", sans-serif;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.15s, border-color 0.15s, transform 0.1s;
+        min-width: 80px;
+      `;
+
+      const iconEl = document.createElement('span');
+      iconEl.style.fontSize = '28px';
+      iconEl.textContent = emote.icon;
+
+      const keyEl = document.createElement('span');
+      keyEl.style.cssText = 'font-size:10px; opacity:0.5; letter-spacing:1px;';
+      keyEl.textContent = `[${i + 1}]`;
+
+      const labelEl = document.createElement('span');
+      labelEl.style.cssText = 'font-size:11px; opacity:0.85;';
+      labelEl.textContent = emote.label;
+
+      btn.append(iconEl, labelEl, keyEl);
+
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = 'rgba(126,232,162,0.18)';
+        btn.style.borderColor = 'rgba(126,232,162,0.6)';
+        btn.style.transform = 'scale(1.06)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = 'rgba(0,0,0,0.72)';
+        btn.style.borderColor = 'rgba(255,255,255,0.18)';
+        btn.style.transform = 'scale(1)';
+      });
+      btn.addEventListener('click', () => this._playEmote(emote.clip));
+
+      panel.appendChild(btn);
+    });
+
+    // Hint de cierre
+    const hint = document.createElement('div');
+    hint.style.cssText = `
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 11px;
+      white-space: nowrap;
+      font-family: "Segoe UI", sans-serif;
+      pointer-events: none;
+    `;
+    hint.textContent = 'B / Esc para cerrar · 1-4 para seleccionar';
+    panel.appendChild(hint);
+
+    document.body.appendChild(panel);
+    this._emotePanel = panel;
   },
 
   /* ─── Aceleración de raycast (three-mesh-bvh, opcional) ───────────────── */
@@ -88,6 +184,47 @@ AFRAME.registerComponent('player-avatar', {
     });
   },
 
+  /* ─── Emotes ────────────────────────────────────────────────────────── */
+  _toggleEmotePicker() {
+    this.emoteOpen = !this.emoteOpen;
+    if (this._emotePanel) {
+      this._emotePanel.style.display = this.emoteOpen ? 'flex' : 'none';
+    }
+    // Mientras el picker está abierto, bloquear el puntero libera el mouse
+    if (this.emoteOpen) {
+      document.exitPointerLock?.();
+    } else if (!this.isEmoting) {
+      document.querySelector('a-scene')?.canvas?.requestPointerLock?.();
+    }
+  },
+
+  _playEmote(clip) {
+    this.isEmoting = true;
+    this.emoteOpen = false;
+    if (this._emotePanel) this._emotePanel.style.display = 'none';
+
+    if (this.playerModel) {
+      // Forzar vista 3ra persona para ver el baile
+      if (!this.isThirdPerson) this._togglePerspective();
+      this.playerModel.setAttribute('animation-mixer',
+        `clip: ${clip}; loop: repeat; crossFadeDuration: 0.4; timeScale: 1`);
+    }
+
+    const emote = this._emotes.find(e => e.clip === clip);
+    window.dispatchEvent(new CustomEvent('game-message', {
+      detail: { text: `${emote?.icon ?? '💃'} ${emote?.label ?? clip}`, type: 'info' }
+    }));
+
+    // Reclamar puntero
+    document.querySelector('a-scene')?.canvas?.requestPointerLock?.();
+  },
+
+  _stopEmote() {
+    if (!this.isEmoting) return;
+    this.isEmoting = false;
+    this._updateAnimation();
+  },
+
   /* ─── Chat abierto: congelar el movimiento ───────────────────────────── */
   _onChat(e) {
     this.chatOpen = !!(e.detail && e.detail.open);
@@ -99,12 +236,43 @@ AFRAME.registerComponent('player-avatar', {
 
   _onKeyDown(e) {
     if (this.chatOpen) return;
+
+    if (e.code === 'KeyB') {
+      e.preventDefault();
+      if (this.isEmoting) {
+        this._stopEmote();
+      } else {
+        this._toggleEmotePicker();
+      }
+      return;
+    }
+
+    if (e.code === 'Escape' && (this.emoteOpen || this.isEmoting)) {
+      e.preventDefault();
+      if (this.emoteOpen) this._toggleEmotePicker();
+      this._stopEmote();
+      return;
+    }
+
+    // Teclas 1-4 para seleccionar emote directamente (picker abierto o no)
+    const digitMap = { 'Digit1': 0, 'Digit2': 1, 'Digit3': 2, 'Digit4': 3 };
+    if (e.code in digitMap && (this.emoteOpen || this.isEmoting)) {
+      e.preventDefault();
+      this._playEmote(this._emotes[digitMap[e.code]].clip);
+      return;
+    }
+
     this.keysDown.add(e.code);
+
     if (e.code === 'KeyQ') {
       e.preventDefault();
       this._togglePerspective();
       return;
     }
+
+    // Cualquier movimiento cancela el emote
+    if (this.isEmoting) this._stopEmote();
+
     this._updateAnimation();
   },
 
@@ -136,6 +304,7 @@ AFRAME.registerComponent('player-avatar', {
 
   tick(time, dt) {
     if (this.chatOpen || !dt) return;
+    if (this.emoteOpen) return;   // no mover mientras el picker está abierto
     const k = this.keysDown;
 
     let f = 0, s = 0;
