@@ -74,10 +74,10 @@ function showVictoryOverlay(total) {
       padding:40px 30px;max-width:420px;width:90%;text-align:center;">
       <div style="font-size:5rem;margin-bottom:20px;">🎓</div>
       <h1 style="color:#7ee8a2;font-size:1.7rem;font-weight:800;margin-bottom:12px;">
-        Has visto todas las senyas LSEC</h1>
+        Has visto todas las Senias LSEC</h1>
       <p style="color:#ccc;font-size:.9rem;line-height:1.5;margin-bottom:24px;">
-        Completaste las <strong>${total}</strong> senyas de la
-        <strong>Lengua de Senyas Ecuatoriana</strong> en SignIsland.</p>
+        Completaste las <strong>${total}</strong> Senias de la
+        <strong>Lengua de Senias Ecuatoriana</strong> en SignIsland.</p>
       <button id="victory-close-btn"
         style="background:linear-gradient(90deg,#7ee8a2,#38bdf8);border:none;
           color:#0a1628;font-size:1rem;font-weight:800;padding:14px 36px;
@@ -309,7 +309,7 @@ AFRAME.registerComponent('academia', {
     const bar     = '##########'.slice(0, filled) + '..........'.slice(0, 10 - filled);
 
     this._setText('b1', 'Academia LSEC',                        '#f0e070');
-    this._setText('b2', `Senyas vistas: ${visited} / ${total}`, '#9be89b');
+    this._setText('b2', `Senias vistas: ${visited} / ${total}`, '#9be89b');
     this._setText('b3', bar,                                     '#4a7a4a');
     this._setText('b4', '',                                      '#90b890');
     this._setText('b5',

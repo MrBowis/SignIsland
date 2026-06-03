@@ -1,296 +1,475 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SignIsland 🏝️ — Aprende Lengua de Señas</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SignIsland 🏝️ — Aprende Lengua de Señas</title>
+    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.0/dist/aframe-extras.min.js"></script>
+    <!-- Raycast acelerado para colisiones contra la malla del escenario -->
+    <script src="https://unpkg.com/three-mesh-bvh@0.7.8/build/index.umd.cjs"></script>
 
-  <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.0/dist/aframe-extras.min.js"></script>
-  <script src="https://unpkg.com/aframe-environment-component/dist/aframe-environment-component.min.js"></script>
+    <script src="components/npc-dialog.js"></script>
+    <script src="components/world-builder.js"></script>
+    <script src="components/inventory.js"></script>
+    <script src="components/sign-lesson.js"></script>
+    <script src="components/video-screen.js"></script>
+    <script src="components/cartesian-grid.js"></script>
+    <script src="components/video-map.js"></script>
+    <script src="components/player-avatar.js"></script>
 
-  <script src="components/npc-dialog.js"></script>
-  <script src="components/world-builder.js"></script>
-  <script src="components/inventory.js"></script>
-  <script src="components/sign-lesson.js"></script>
+    <!-- Multijugador NAF + audio espacial (socket.io lo sirve el servidor Node.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/networked-aframe@0.12.1/dist/networked-aframe.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="components/network.js"></script>
+    <script src="components/chat.js"></script>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    #hud {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      z-index: 100;
-      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
-    }
+      #hud {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 100;
+        font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+      }
 
-    #instructions {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(8px);
-      color: #fff;
-      padding: 10px 22px;
-      border-radius: 30px;
-      font-size: 13px;
-      letter-spacing: 0.5px;
-      pointer-events: none;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-    }
+      #instructions {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 30px;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        pointer-events: none;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
 
-    #loading-screen {
-      position: fixed;
-      inset: 0;
-      background: #0a1628;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.8s ease;
-      font-family: 'Segoe UI Emoji', sans-serif;
-    }
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        background: #0a1628;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.8s ease;
+        font-family: "Segoe UI Emoji", sans-serif;
+      }
 
-    #loading-screen.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
+      #loading-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
 
-    #loading-screen h1 {
-      color: #7ee8a2;
-      font-size: 2.5rem;
-      margin-bottom: 8px;
-    }
+      #loading-screen h1 {
+        color: #7ee8a2;
+        font-size: 2.5rem;
+        margin-bottom: 8px;
+      }
 
-    #loading-screen p {
-      color: #aaa;
-      font-size: 1rem;
-      margin-bottom: 32px;
-    }
+      #loading-screen p {
+        color: #aaa;
+        font-size: 1rem;
+        margin-bottom: 32px;
+      }
 
-    .loader-bar {
-      width: 220px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      overflow: hidden;
-    }
+      .loader-bar {
+        width: 220px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+      }
 
-    .loader-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #7ee8a2, #38bdf8);
-      border-radius: 4px;
-      animation: load 2s ease forwards;
-    }
+      .loader-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #7ee8a2, #38bdf8);
+        border-radius: 4px;
+        animation: load 2s ease forwards;
+      }
 
-    @keyframes load {
-      from { width: 0%; }
-      to   { width: 100%; }
-    }
+      @keyframes load {
+        from {
+          width: 0%;
+        }
+        to {
+          width: 100%;
+        }
+      }
 
-    #npc-hint {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(8px);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
+      #npc-hint {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
 
-    #npc-hint.visible {
-      opacity: 1;
-    }
+      #npc-hint.visible {
+        opacity: 1;
+      }
 
-    #minimap {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 120px;
-      height: 120px;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(8px);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: #aaa;
-      flex-direction: column;
-      gap: 4px;
-      pointer-events: none;
-    }
+      #minimap {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        width: 120px;
+        height: 120px;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: #aaa;
+        flex-direction: column;
+        gap: 4px;
+        pointer-events: none;
+      }
 
-    #minimap canvas {
-      width: 100px;
-      height: 100px;
-      border-radius: 8px;
-    }
-  </style>
-</head>
+      #minimap canvas {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+      }
 
-<body>
+      /* ─── Chat de texto ─── */
+      #chat {
+        position: fixed;
+        bottom: 70px;
+        left: 20px;
+        width: 340px;
+        max-width: 60vw;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        opacity: 0.2;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+        z-index: 150;
+        font-family: "Segoe UI", sans-serif;
+      }
 
-  <div id="loading-screen">
-    <h1>🏝️ SignIsland</h1>
-    <p>Bienvenido a la isla donde todos hablan con las manos</p>
-    <div class="loader-bar">
-      <div class="loader-fill"></div>
+      #chat-log {
+        max-height: 180px;
+        overflow-y: auto;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 8px 12px;
+        color: #fff;
+        font-size: 13px;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      #chat-log:empty {
+        display: none;
+      }
+
+      .chat-name {
+        color: #7ee8a2;
+        font-weight: 600;
+      }
+
+      .chat-name.me {
+        color: #38bdf8;
+      }
+
+      #chat-input {
+        display: none;
+        pointer-events: auto;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(126, 232, 162, 0.55);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: #fff;
+        font-size: 13px;
+        outline: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="loading-screen">
+      <h1>🏝️ SignIsland</h1>
+      <p>Bienvenido a la isla donde todos hablan con las manos</p>
+      <div class="loader-bar">
+        <div class="loader-fill"></div>
+      </div>
     </div>
-  </div>
 
-  <div id="hud">
-    <div id="instructions">
-      WASD mover &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; ↑↓ navegar lecciones &nbsp;·&nbsp; Esc cerrar
+    <div id="hud">
+      <div id="instructions">
+        WASD mover &nbsp;·&nbsp; Shift correr &nbsp;·&nbsp; Q cambiar vista
+        &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; T chat &nbsp;·&nbsp; G rejilla
+        &nbsp;·&nbsp; Esc cerrar
+      </div>
+
+      <!-- Chat de texto (T para abrir) -->
+      <div id="chat">
+        <div id="chat-log"></div>
+        <input
+          id="chat-input"
+          type="text"
+          maxlength="200"
+          placeholder="Escribe un mensaje y pulsa Enter…"
+          autocomplete="off"
+        />
+      </div>
+      <div id="npc-hint">👆 Presiona <strong>E</strong> para hablar</div>
+      <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
+
+      <div
+        id="player-count"
+        style="
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(8px);
+          color: #fff;
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          pointer-events: none;
+        "
+      >
+        👥 1 jugador
+      </div>
+
+      <button
+        id="mic-toggle"
+        style="
+          position: fixed;
+          bottom: 70px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #fff;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          font-size: 18px;
+          cursor: pointer;
+          pointer-events: auto;
+          z-index: 200;
+        "
+        title="Activar/desactivar micrófono"
+      >
+        🎤
+      </button>
     </div>
-    <div id="npc-hint">👆 Presiona <strong>E</strong> para hablar</div>
-    <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
-  </div>
 
-  <a-scene keyboard-shortcuts="enterVR: false"
-    renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true" shadow="type: pcfsoft"
-    fog="type: exponential; color: #b8d4f0; density: 0.012"
-    loading-screen="dotsColor: #7ee8a2; backgroundColor: #0a1628">
-
-    <a-assets timeout="10000">
-      <a-asset-item id="academy-model" src="assets/models/academy.glb"></a-asset-item>
-      <a-asset-item id="tree-model"    src="assets/models/arbol.glb"></a-asset-item>
-      <a-asset-item id="npc-model"     src="assets/models/npc1.glb"></a-asset-item>
-      <a-asset-item id="rock-model"    src="assets/models/roca.glb"></a-asset-item>
-    </a-assets>
-
-    <a-entity environment="
-      preset: forest; groundColor: #5a8a3c; groundColor2: #3d6b28;
-      grid: none; skyType: gradient; skyColor: #87ceeb; horizonColor: #b8e4f9;
-      fog: 0.6; flatShading: false; playArea: 1; dressing: trees;
-      dressingAmount: 60; dressingColor: #2d5a1b; dressingScale: 1.2;
-      shadow: true; shadowSize: 10; lighting: distant; lightPosition: 1 1 -0.5
-    "></a-entity>
-
-    <a-light type="ambient" color="#c8e8ff" intensity="0.6"></a-light>
-    <a-light type="directional" color="#fff5e0" intensity="1.2" position="30 60 -20" cast-shadow="true"
-      shadow-camera-left="-80" shadow-camera-right="80" shadow-camera-top="80" shadow-camera-bottom="-80">
-    </a-light>
-
-    <a-plane id="ground" rotation="-90 0 0" width="120" height="120" color="#5a8a3c" shadow="receive: true"
-      static-body></a-plane>
-    <a-ring rotation="-90 0 0" position="0 0.01 0" radius-inner="55" radius-outer="70" color="#e8c87a"
-      shadow="receive: true"></a-ring>
-    <a-plane rotation="-90 0 0" position="0 -0.5 0" width="300" height="300" color="#1a6fa8" opacity="0.85"></a-plane>
-
-
-    <!-- ═══════════ ACADEMIA ═══════════ -->
-    <a-entity id="academia-building" position="0 0 -20">
-
-      <!-- Modelo 3D del edificio -->
-      <a-entity gltf-model="#academy-model" position="5.2 -2 -24" rotation="0 270 0" scale="0.03 0.03 0.03"
-        shadow="cast: true; receive: true"></a-entity>
-
-      <!-- Cartel exterior -->
-      <a-text value="🏛️ ACADEMIA DE SEÑAS" align="center" color="#fff" width="10" position="0 11 7.2"
-        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" shadow></a-text>
-
-      <!-- ──── PIZARRÓN (interfaz inmersiva de lecciones) ──── -->
-      <a-entity id="pizarron" academia="range: 12" position="0 0 3">
-
-        <!-- Marco de madera -->
-        <a-box width="5.6" height="3.9" depth="0.14" color="#5c3315"
-          position="0 2.5 -0.01" shadow="cast: true"></a-box>
-
-        <!-- Superficie del pizarrón (verde pizarra) -->
-        <a-plane id="pizarron-surface" width="5" height="3.4" color="#1a3d1a"
-          position="0 2.5 0.07"></a-plane>
-
-        <!-- Bandeja portaltizas -->
-        <a-box width="5.4" height="0.11" depth="0.2" color="#7a5c3a"
-          position="0 0.88 0.07" shadow="cast: true"></a-box>
-
-        <!-- Tizas decorativas -->
-        <a-box width="0.28" height="0.06" depth="0.08" color="#f0ece0"
-          position="1.8  0.96 0.11"></a-box>
-        <a-box width="0.22" height="0.06" depth="0.08" color="#f0ddd0"
-          position="-1.5 0.96 0.11"></a-box>
-
+    <!-- Template del avatar remoto (multijugador NAF) -->
+    <template id="avatar-template">
+      <a-entity>
+        <a-entity
+          gltf-model="#character-model"
+          animation-mixer="clip: Walk; loop: repeat; crossFadeDuration: 0.3"
+          scale="1 1 1"
+          shadow="cast: true"
+        >
+        </a-entity>
+        <a-text
+          value="???"
+          position="0 2.4 0"
+          align="center"
+          color="#fff"
+          width="3"
+          shader="flat"
+        >
+        </a-text>
+        <a-entity networked-audio-source></a-entity>
       </a-entity>
-      <!-- (el componente academia agrega entidades de texto y botones de quiz en init()) -->
+    </template>
 
-      <!-- NPC Secretaria de bienvenida -->
-      <a-entity npc-dialog="name: Academia; emojis: 🏛️👋,📚✋,🎓👐,✨🤝; label: Secretaria; color: #e8d5b0"
-        position="3 1 9" geometry="primitive: box; width: 1.5; height: 2; depth: 1"
-        material="opacity: 0"></a-entity>
-      <!-- Cuerpo 3D de la secretaria -->
-      <a-npc-body color="#e8d5b0" hat-color="#c0392b" position="3 0 9"></a-npc-body>
+    <a-scene
+      keyboard-shortcuts="enterVR: false"
+      networked-scene="
+      room: signisland-island;
+      adapter: socketio;
+      serverURL: /;
+      audio: true;
+      debug: false;
+      connectOnLoad: true
+    "
+      renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
+      shadow="type: pcfsoft"
+      fog="type: exponential; color: #b8d4f0; density: 0.012"
+      loading-screen="dotsColor: #7ee8a2; backgroundColor: #0a1628"
+    >
+      <a-assets timeout="30000">
+        <a-asset-item
+          id="scene-model"
+          src="assets/models/scene.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="character-model"
+          src="assets/models/character.glb"
+        ></a-asset-item>
+      </a-assets>
 
-    </a-entity>
+      <!-- Cielo simple (el escenario lo aporta scene.glb) -->
+      <a-sky color="#b8e4f9"></a-sky>
 
+      <a-light type="ambient" color="#c8e8ff" intensity="0.6"></a-light>
+      <a-light
+        type="directional"
+        color="#fff5e0"
+        intensity="1.2"
+        position="30 60 -20"
+        cast-shadow="true"
+        shadow-camera-left="-80"
+        shadow-camera-right="80"
+        shadow-camera-top="80"
+        shadow-camera-bottom="-80"
+      >
+      </a-light>
 
-    <!-- ═══════════ CAMINOS Y PLAZA ═══════════ -->
-    <a-box width="4" height="0.05" depth="60" color="#c8b89a" position="0 0.03 0" shadow="receive: true"></a-box>
-    <a-box width="60" height="0.05" depth="4" color="#c8b89a" position="0 0.03 -10" shadow="receive: true"></a-box>
-    <a-cylinder radius="8" height="0.06" color="#d4c5a9" position="0 0.04 -10" shadow="receive: true"></a-cylinder>
+      <!-- ═══════════ MUNDO (modelo GLB completo) ═══════════ -->
+      <a-entity
+        id="world"
+        gltf-model="#scene-model"
+        shadow="cast: true; receive: true"
+      >
+      </a-entity>
 
-    <!-- Fuente central -->
-    <a-entity position="0 0 -10">
-      <a-cylinder radius="2.5" height="0.5" color="#bdc3c7" shadow="cast: true; receive: true"></a-cylinder>
-      <a-cylinder radius="0.2" height="2" color="#95a5a6" position="0 1.5 0" shadow="cast: true"></a-cylinder>
-      <a-sphere radius="0.4" color="#3498db" opacity="0.8" position="0 2.5 0"
-        animation="property: position; to: 0 2.8 0; dur: 2000; easing: easeInOutSine; loop: true; dir: alternate">
-      </a-sphere>
-    </a-entity>
+      <!-- ═══════════ PANTALLAS DE VIDEO ═══════════ -->
+      <!-- Se generan desde components/video-map.js (objeto VIDEO_SCREENS).
+           Edita ese archivo para mover/añadir TVs. Acércate y pulsa E. -->
 
-    <!-- Farolas -->
-    <a-entity id="farolas">
-      <a-entity farola position="8 0 -10"></a-entity>
-      <a-entity farola position="-8 0 -10"></a-entity>
-      <a-entity farola position="0 0 -18"></a-entity>
-      <a-entity farola position="0 0 -2"></a-entity>
-      <a-entity farola position="12 0 -20"></a-entity>
-      <a-entity farola position="-12 0 -20"></a-entity>
-    </a-entity>
+      <!-- Plano cartesiano de referencia (rejilla + ejes X/Y/Z).
+           Alterna desde código con toggleGrid() o con la tecla G. -->
+      <a-entity id="grid" cartesian-grid visible="true"></a-entity>
 
-    <!-- Arco de bienvenida -->
-    <a-entity position="0 0 10">
-      <a-cylinder radius="0.15" height="5" color="#8b5e3c" position="-3 2.5 0" shadow="cast: true"></a-cylinder>
-      <a-cylinder radius="0.15" height="5" color="#8b5e3c" position="3 2.5 0" shadow="cast: true"></a-cylinder>
-      <a-box width="7" height="1.8" depth="0.2" color="#d4a855" position="0 4.5 0" shadow="cast: true"></a-box>
-      <a-text value="🏝️ BIENVENIDO A SIGNISLAND" align="center" color="#2c1810" width="7"
-        position="0 4.5 0.2"></a-text>
-    </a-entity>
+      <!-- ═══════════ ACADEMIA ═══════════ -->
+      <a-entity id="academia-building" position="0 0 -20">
+        <!-- ──── PIZARRÓN (interfaz inmersiva de lecciones) ──── -->
+        <a-entity id="pizarron" academia="range: 12" position="0 0 3">
+          <!-- Marco de madera -->
+          <a-box
+            width="5.6"
+            height="3.9"
+            depth="0.14"
+            color="#5c3315"
+            position="0 2.5 -0.01"
+            shadow="cast: true"
+          ></a-box>
 
+          <!-- Superficie del pizarrón (verde pizarra) -->
+          <a-plane
+            id="pizarron-surface"
+            width="5"
+            height="3.4"
+            color="#1a3d1a"
+            position="0 2.5 0.07"
+          ></a-plane>
 
-    <!-- ═══════════ JUGADOR ═══════════ -->
-    <a-entity id="player" position="0 0 17"
-      movement-controls="speed: 0.12; fly: false; constrainToNavMesh: false">
-      <a-camera id="camera" position="0 2 0" look-controls="pointerLockEnabled: true"
-        wasd-controls="enabled: false">
-        <a-entity cursor="rayOrigin: mouse; fuse: false"
-          raycaster="objects: [npc-dialog]; near: 0; far: 7" position="0 0 -1"
-          geometry="primitive: ring; radiusInner: 0.008; radiusOuter: 0.013"
-          material="color: white; shader: flat; opacity: 0.8"></a-entity>
-      </a-camera>
-    </a-entity>
+          <!-- Bandeja portaltizas -->
+          <a-box
+            width="5.4"
+            height="0.11"
+            depth="0.2"
+            color="#7a5c3a"
+            position="0 0.88 0.07"
+            shadow="cast: true"
+          ></a-box>
 
-  </a-scene>
+          <!-- Tizas decorativas -->
+          <a-box
+            width="0.28"
+            height="0.06"
+            depth="0.08"
+            color="#f0ece0"
+            position="1.8  0.96 0.11"
+          ></a-box>
+          <a-box
+            width="0.22"
+            height="0.06"
+            depth="0.08"
+            color="#f0ddd0"
+            position="-1.5 0.96 0.11"
+          ></a-box>
+        </a-entity>
+      </a-entity>
 
-  <script src="components/scene-logic.js"></script>
-</body>
+      <!-- ═══════════ JUGADOR ═══════════ -->
+      <a-entity
+        id="player"
+        position="-50 0 -15"
+        player-avatar
+        networked="template: #avatar-template; attachTemplateToLocal: false"
+      >
+        <!-- Modelo 3D del personaje — oculto en 1ra persona, visible en 3ra -->
+        <a-entity
+          id="player-model"
+          gltf-model="#character-model"
+          animation-mixer="clip: Idle; loop: repeat; crossFadeDuration: 0.3"
+          position="0 0 0"
+          rotation="0 180 0"
+          scale="1 1 1"
+          shadow="cast: true"
+          visible="false"
+        >
+        </a-entity>
 
+        <!-- Pivote de cámara: look-controls orbita alrededor del jugador.
+           En 3ra persona la cámara se desplaza hacia atrás (player-avatar). -->
+        <a-entity
+          id="cam-pivot"
+          position="0 1.7 0"
+          look-controls="pointerLockEnabled: true"
+        >
+          <a-camera
+            id="camera"
+            position="0 0 0"
+            look-controls="enabled: false"
+            wasd-controls="enabled: false"
+          >
+            <a-entity
+              cursor="rayOrigin: mouse; fuse: false"
+              raycaster="objects: [npc-dialog]; near: 0; far: 7"
+              position="0 0 -1"
+              geometry="primitive: ring; radiusInner: 0.008; radiusOuter: 0.013"
+              material="color: white; shader: flat; opacity: 0.8"
+            ></a-entity>
+          </a-camera>
+        </a-entity>
+      </a-entity>
+    </a-scene>
+
+    <script src="components/scene-logic.js"></script>
+  </body>
 </html>

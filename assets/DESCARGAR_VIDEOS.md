@@ -35,6 +35,7 @@ yt-dlp -o "%(id)s.mp4" -f "mp4[height<=720]/best[ext=mp4]" \
   "https://www.youtube.com/watch?v=BVYQn8Z8mQk" \
   "https://www.youtube.com/watch?v=_NV7UPduH3E" \
   "https://www.youtube.com/watch?v=SSKlBHbEIJ8"
+  
 ```
 
 ## Resultado esperado en assets/videos/
