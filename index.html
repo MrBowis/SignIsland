@@ -29,6 +29,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="components/network.js"></script>
     <script src="components/chat.js"></script>
+    <script src="components/webcam.js"></script>
 
     <style>
       * {
@@ -120,7 +121,7 @@
 
       #npc-hint {
         position: fixed;
-        top: 20px;
+        top: 188px;
         right: 20px;
         background: rgba(0, 0, 0, 0.55);
         backdrop-filter: blur(8px);
@@ -235,8 +236,8 @@
     <div id="hud">
       <div id="instructions">
         WASD mover &nbsp;·&nbsp; Shift correr &nbsp;·&nbsp; Q cambiar vista
-        &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; B emotes &nbsp;·&nbsp; T chat &nbsp;·&nbsp; G rejilla
-        &nbsp;·&nbsp; Esc cerrar
+        &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; B emotes &nbsp;·&nbsp; T chat &nbsp;·&nbsp; C cámara
+        &nbsp;·&nbsp; G rejilla &nbsp;·&nbsp; Esc cerrar
       </div>
 
       <!-- Chat de texto (T para abrir) -->
@@ -250,6 +251,47 @@
           autocomplete="off"
         />
       </div>
+      <!-- Vista propia de la cámara (lengua de señas) — esquina superior derecha -->
+      <div
+        id="self-cam"
+        style="
+          display: none;
+          position: fixed;
+          top: 16px;
+          right: 16px;
+          width: 180px;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(8px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+          z-index: 180;
+          pointer-events: none;
+        "
+      >
+        <video
+          id="self-cam-video"
+          autoplay
+          playsinline
+          muted
+          style="display: block; width: 100%; height: 135px; object-fit: cover; transform: scaleX(-1); background: #000;"
+        ></video>
+        <div
+          style="
+            position: absolute;
+            bottom: 6px;
+            left: 8px;
+            color: #fff;
+            font-size: 11px;
+            font-family: 'Segoe UI', sans-serif;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+          "
+        >
+          📹 Tú
+        </div>
+      </div>
+
       <div id="npc-hint">👆 Presiona <strong>E</strong> para hablar</div>
       <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
 
@@ -272,6 +314,29 @@
       >
         👥 1 jugador
       </div>
+
+      <button
+        id="cam-toggle"
+        style="
+          position: fixed;
+          bottom: 122px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #fff;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          font-size: 18px;
+          cursor: pointer;
+          pointer-events: auto;
+          z-index: 200;
+        "
+        title="Activar/desactivar cámara (C)"
+      >
+        📷
+      </button>
 
       <button
         id="mic-toggle"
@@ -312,13 +377,15 @@
         <a-text
           class="avatar-name"
           value="Jugador"
-          position="0 2.4 0"
+          position="0 0 0"
           align="center"
           color="#fff"
           width="3"
           shader="flat"
         ></a-text>
         <a-entity networked-audio-source></a-entity>
+        <!-- Panel de cámara (lengua de señas) sobre el avatar remoto. -->
+        <a-entity class="peer-cam" cam-panel position="0 0 0"></a-entity>
       </a-entity>
     </template>
 
@@ -334,7 +401,7 @@
     "
       renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
       shadow="type: pcfsoft"
-      fog="type: exponential; color: #0a1020; density: 0.014"
+      fog="type: exponential; color: #cfe3f5; density: 0.006"
       loading-screen="dotsColor: #7ee8a2; backgroundColor: #0a1628"
     >
       <!-- timeout alto: scene.glb pesa ~127 MB y por WiFi tarda en otros equipos -->
@@ -349,44 +416,47 @@
         ></a-asset-item>
       </a-assets>
 
-      <!-- Cielo nocturno -->
-      <a-sky color="#060a18"></a-sky>
+      <!-- Cielo diurno: color base de respaldo + degradado procedural encima -->
+      <a-sky color="#bfe0ff"></a-sky>
+      <a-entity gradient-sky></a-entity>
 
-      <!-- Campo de estrellas procedural -->
-      <a-entity starry-sky></a-entity>
-
-      <!-- Luna -->
+      <!-- Sol -->
       <a-sphere
-        position="180 260 -500"
-        radius="18"
-        color="#e8e4d0"
+        position="120 210 -360"
+        radius="22"
+        color="#fff6d8"
         shader="flat"
-        emissive="#c8c4b0"
-        emissive-intensity="0.4"
+        emissive="#fff2c0"
+        emissive-intensity="0.6"
         segments-height="16"
         segments-width="16"
       ></a-sphere>
 
-      <!-- Halo suave alrededor de la luna -->
+      <!-- Halo suave alrededor del sol -->
       <a-sphere
-        position="180 260 -500"
-        radius="26"
-        color="#8090b0"
+        position="120 210 -360"
+        radius="40"
+        color="#fff2c0"
         shader="flat"
-        material="transparent: true; opacity: 0.08; side: back"
+        material="transparent: true; opacity: 0.12; side: back"
         segments-height="8"
         segments-width="8"
       ></a-sphere>
 
-      <!-- Luz ambiental nocturna -->
-      <a-light type="ambient" color="#3a4f70" intensity="1.1"></a-light>
+      <!-- Luz de cielo/suelo (hemisférica) para iluminación diurna suave -->
+      <a-light
+        type="hemisphere"
+        color="#cfe6ff"
+        ground-color="#5a6b48"
+        intensity="1.0"
+      ></a-light>
 
-      <!-- Luz de luna -->
+      <!-- Luz solar direccional cálida -->
       <a-light
         type="directional"
-        color="#c8dcff"
-        intensity="0.9"
-        position="180 260 -500"
+        color="#fff4e0"
+        intensity="1.6"
+        position="120 210 -360"
         cast-shadow="true"
         shadow-camera-left="-80"
         shadow-camera-right="80"
@@ -484,6 +554,9 @@
         >
         </a-entity>
 
+        <!-- Panel de cámara propio (visible en 3ra persona y para los demás). -->
+        <a-entity cam-panel="self: true" position="0 1 -0.1"></a-entity>
+
         <!-- Pivote de cámara: look-controls orbita alrededor del jugador.
            En 3ra persona la cámara se desplaza hacia atrás (player-avatar). -->
         <a-entity
@@ -512,42 +585,53 @@
     <script src="components/scene-logic.js"></script>
 
     <script>
-      AFRAME.registerComponent('starry-sky', {
+      // Cielo diurno con degradado vertical (cenit → horizonte).
+      // Esfera grande con BackSide y un shader sencillo; sin dependencias extra.
+      AFRAME.registerComponent('gradient-sky', {
+        schema: {
+          top:      { type: 'color',  default: '#2a7fd4' },
+          bottom:   { type: 'color',  default: '#dff1ff' },
+          offset:   { type: 'number', default: 180 },
+          exponent: { type: 'number', default: 0.8 },
+        },
         init() {
-          const COUNT = 3500;
-          const positions = new Float32Array(COUNT * 3);
-          const colors    = new Float32Array(COUNT * 3);
-
-          for (let i = 0; i < COUNT; i++) {
-            let x, y, z, len;
-            do {
-              x = (Math.random() - 0.5) * 2;
-              y = Math.random();
-              z = (Math.random() - 0.5) * 2;
-              len = Math.sqrt(x * x + y * y + z * z);
-            } while (len < 0.01);
-
-            const R = 950;
-            positions[i * 3]     = (x / len) * R;
-            positions[i * 3 + 1] = (y / len) * R;
-            positions[i * 3 + 2] = (z / len) * R;
-
-            colors[i * 3] = 1.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0;
-          }
-
-          const geo = new THREE.BufferGeometry();
-          geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-          geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
-
-          const mat = new THREE.PointsMaterial({
-            size: 3.0,
-            vertexColors: true,
-            transparent: true,
-            opacity: 1.0,
-            sizeAttenuation: false,
+          const geo = new THREE.SphereGeometry(990, 32, 15);
+          const mat = new THREE.ShaderMaterial({
+            side: THREE.BackSide,
+            depthWrite: false,
+            fog: false,
+            uniforms: {
+              topColor:    { value: new THREE.Color(this.data.top) },
+              bottomColor: { value: new THREE.Color(this.data.bottom) },
+              offset:      { value: this.data.offset },
+              exponent:    { value: this.data.exponent },
+            },
+            vertexShader: `
+              varying vec3 vWorldPosition;
+              void main() {
+                vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              uniform vec3 topColor;
+              uniform vec3 bottomColor;
+              uniform float offset;
+              uniform float exponent;
+              varying vec3 vWorldPosition;
+              void main() {
+                float h = normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y;
+                float f = pow(max(h, 0.0), exponent);
+                gl_FragColor = vec4(mix(bottomColor, topColor, f), 1.0);
+              }
+            `,
           });
-
-          this.el.object3D.add(new THREE.Points(geo, mat));
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.frustumCulled = false;
+          this.el.setObject3D('mesh', mesh);
+        },
+        remove() {
+          this.el.removeObject3D('mesh');
         },
       });
     </script>
