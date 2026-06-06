@@ -124,10 +124,11 @@
       if (!data.on)                         emitStreamGone(senderId);
     });
 
-    // Conectar con peers ya presentes al momento de arranque
+    // Conectar con peers ya presentes al momento de arranque.
+    // adapter.occupants es { clientId: joinTime } y excluye al propio.
     try {
-      const clients = NAF.connection.getConnectedClients() ?? {};
-      Object.keys(clients).forEach((id) => { if (id !== myId) addPeer(id); });
+      const occ = NAF.connection.adapter.occupants || {};
+      Object.keys(occ).forEach((id) => { if (id !== myId) addPeer(id); });
     } catch (_) {}
   }
 

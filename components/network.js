@@ -36,11 +36,13 @@ AFRAME.registerComponent('follow-rotation', {
   },
 });
 
-/* ─── Contador de jugadores ─────────────────────────────────────────────── */
+/* ─── Contador de jugadores (recalculado desde los ocupantes reales) ─────── */
 let playerCount = 1;
 
-function updatePlayerCount(delta) {
-  playerCount = Math.max(1, playerCount + delta);
+function refreshPlayerCount() {
+  let others = 0;
+  try { others = Object.keys(NAF.connection.adapter.occupants || {}).length; } catch (_) {}
+  playerCount = others + 1;
   const el = document.getElementById('player-count');
   if (el) el.textContent = `👥 ${playerCount} jugador${playerCount !== 1 ? 'es' : ''}`;
 }
@@ -64,7 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  scene.addEventListener('connected', () => {
+  // ⚠️ NAF despacha connected/clientConnected/clientDisconnected en
+  // document.body, NO en la escena. Escuchar en el elemento correcto.
+  document.body.addEventListener('connected', () => {
     const clientId = NAF.clientId;
     console.log('[SignIsland] Conectado como', clientId);
 
@@ -74,33 +78,20 @@ document.addEventListener('DOMContentLoaded', () => {
       player.setAttribute('player-info', 'name', window.PLAYER_NAME);
     }
 
+    refreshPlayerCount();
     window.dispatchEvent(new CustomEvent('network-connected', { detail: { clientId } }));
   });
 
-  scene.addEventListener('clientConnected', e => {
-    updatePlayerCount(+1);
+  document.body.addEventListener('clientConnected', e => {
+    refreshPlayerCount();
     window.dispatchEvent(new CustomEvent('network-player-joined',
       { detail: { clientId: e.detail.clientId } }));
   });
 
-  scene.addEventListener('clientDisconnected', e => {
-    updatePlayerCount(-1);
+  document.body.addEventListener('clientDisconnected', e => {
+    refreshPlayerCount();
     window.dispatchEvent(new CustomEvent('network-player-left',
       { detail: { clientId: e.detail.clientId } }));
-  });
-});
-
-/* ─── Toggle micrófono ──────────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('mic-toggle')?.addEventListener('click', () => {
-    try {
-      const stream = NAF?.connection?.adapter?.localStream;
-      if (!stream) return;
-      const track = stream.getAudioTracks()[0];
-      if (!track) return;
-      track.enabled = !track.enabled;
-      document.getElementById('mic-toggle').textContent = track.enabled ? '🎤' : '🔇';
-    } catch (_) {}
   });
 });
 

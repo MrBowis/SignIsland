@@ -31,10 +31,6 @@ app.use(express.static(path.join(__dirname, '..')));
 // Mapa de ocupantes por sala: room → { socketId: joinTime }
 const nafRooms = Object.create(null);
 
-// Señalización WebRTC de cámara (lengua de señas): room → { peerId: socketId }.
-// peerId es el NAF.clientId, así el cliente asocia cada stream a su avatar.
-const webrtcRooms = Object.create(null);
-
 function emitOccupants(room) {
   const occupants = nafRooms[room] || {};
   io.to(room).emit('occupantsChanged', { occupants });
@@ -44,8 +40,6 @@ io.on('connection', socket => {
   const ts = () => new Date().toLocaleTimeString();
   let joinedRoom = null;
   let chatRoom   = null;
-  let webrtcRoom = null;
-  let myPeerId   = null;
 
   console.log(`[${ts()}] + conectado    ${socket.id}`);
 
@@ -92,35 +86,6 @@ io.on('connection', socket => {
     });
   });
 
-  // ─── WebRTC: cámara / lengua de señas (señalización en malla) ───────────
-  socket.on('webrtc-join', ({ room, id }) => {
-    if (!room || !id) return;
-    webrtcRoom = room;
-    myPeerId   = id;
-    if (!webrtcRooms[room]) webrtcRooms[room] = Object.create(null);
-
-    // Pares ya presentes (antes de añadirme), para iniciar conexiones.
-    const existing = Object.keys(webrtcRooms[room]).filter((pid) => pid !== id);
-    webrtcRooms[room][id] = socket.id;
-    socket.join('webrtc:' + room);
-
-    socket.emit('webrtc-peers', { peers: existing });
-    socket.to('webrtc:' + room).emit('webrtc-new-peer', { id });
-  });
-
-  // Mensaje de señalización (oferta/respuesta/ICE) dirigido a un par concreto.
-  socket.on('webrtc-signal', ({ to, from, data }) => {
-    if (!webrtcRoom || !to) return;
-    const target = webrtcRooms[webrtcRoom] && webrtcRooms[webrtcRoom][to];
-    if (target) io.to(target).emit('webrtc-signal', { from, data });
-  });
-
-  // Aviso de cámara encendida/apagada a toda la sala.
-  socket.on('webrtc-cam', ({ on }) => {
-    if (!webrtcRoom || !myPeerId) return;
-    socket.to('webrtc:' + webrtcRoom).emit('webrtc-cam', { id: myPeerId, on: !!on });
-  });
-
   socket.on('disconnect', () => {
     if (joinedRoom && nafRooms[joinedRoom]) {
       delete nafRooms[joinedRoom][socket.id];
@@ -129,11 +94,6 @@ io.on('connection', socket => {
       } else {
         emitOccupants(joinedRoom);   // los demás retiran el avatar saliente
       }
-    }
-    if (webrtcRoom && myPeerId && webrtcRooms[webrtcRoom]) {
-      delete webrtcRooms[webrtcRoom][myPeerId];
-      socket.to('webrtc:' + webrtcRoom).emit('webrtc-peer-left', { id: myPeerId });
-      if (Object.keys(webrtcRooms[webrtcRoom]).length === 0) delete webrtcRooms[webrtcRoom];
     }
     console.log(`[${ts()}] - desconectado ${socket.id}`);
   });
