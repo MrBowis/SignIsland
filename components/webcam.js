@@ -124,7 +124,6 @@
     if (typeof io !== 'function') return;   // sin servidor → sin video
 
     socket = io();
-    socket.on('connect',          ()          => socket.emit('webrtc-join', { room: ROOM, id: myId }));
     socket.on('webrtc-peers',     ({ peers: list }) => (list ?? []).forEach(addPeer));
     socket.on('webrtc-new-peer',  ({ id })    => addPeer(id));
     socket.on('webrtc-peer-left', ({ id })    => removePeer(id));
@@ -133,6 +132,13 @@
       if (on && streams.has(id)) emitStream(id);
       if (!on)                   emitStreamGone(id);
     });
+
+    // io() reutiliza la conexión ya abierta por chat.js, así que 'connect'
+    // puede haber disparado antes de que registremos el handler.
+    // Enviamos webrtc-join inmediatamente si ya estamos conectados.
+    const sendJoin = () => socket.emit('webrtc-join', { room: ROOM, id: myId });
+    if (socket.connected) sendJoin();
+    else socket.on('connect', sendJoin);
   }
 
   function makePeer(peerId) {
@@ -267,6 +273,8 @@ AFRAME.registerComponent('cam-panel', {
       }
     } else {
       this._onStream = (e) => {
+        // Si aún no tenemos owner, intentar resolverlo; cuando lo encuentre
+        // llamará _tryAttach que revisará si el stream ya está disponible.
         if (!this.owner) { this._resolveOwner(); return; }
         if (e.detail.peerId === this.owner) this._tryAttach();
       };
@@ -275,6 +283,7 @@ AFRAME.registerComponent('cam-panel', {
       };
       window.addEventListener('webcam-stream',      this._onStream);
       window.addEventListener('webcam-stream-gone', this._onGone);
+      // Intentar resolver el owner inmediatamente (NAF puede no estar listo aún)
       this._resolveOwner();
     }
   },
