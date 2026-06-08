@@ -132,6 +132,8 @@ window.toggleGrid = function (force) {
   if (!el) return;
   const visible = (typeof force === 'boolean') ? force : !el.getAttribute('visible');
   el.setAttribute('visible', visible);
+  // Notificar a los muros de colisión para que se muestren/oculten.
+  window.dispatchEvent(new CustomEvent('grid-toggled', { detail: { visible } }));
   return visible;
 };
 

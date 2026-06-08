@@ -12,7 +12,7 @@
 
     <!-- Nombre único del jugador, compartido por todos los componentes -->
     <script>
-      window.PLAYER_NAME = 'Isleño-' + Math.floor(1000 + Math.random() * 9000);
+      window.PLAYER_NAME = "Isleño-" + Math.floor(1000 + Math.random() * 9000);
     </script>
 
     <script src="components/npc-dialog.js"></script>
@@ -21,6 +21,7 @@
     <script src="components/sign-lesson.js"></script>
     <script src="components/video-screen.js"></script>
     <script src="components/cartesian-grid.js"></script>
+    <script src="components/collision-wall.js"></script>
     <script src="components/video-map.js"></script>
     <script src="components/player-avatar.js"></script>
 
@@ -236,8 +237,9 @@
     <div id="hud">
       <div id="instructions">
         WASD mover &nbsp;·&nbsp; Shift correr &nbsp;·&nbsp; Q cambiar vista
-        &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; B emotes &nbsp;·&nbsp; T chat &nbsp;·&nbsp; C cámara
-        &nbsp;·&nbsp; G rejilla &nbsp;·&nbsp; Esc cerrar
+        &nbsp;·&nbsp; E interactuar &nbsp;·&nbsp; B emotes &nbsp;·&nbsp; F
+        bailar juntos &nbsp;·&nbsp; T chat &nbsp;·&nbsp; C cámara &nbsp;·&nbsp;
+        G rejilla &nbsp;·&nbsp; Esc cerrar
       </div>
 
       <!-- Chat de texto (T para abrir) -->
@@ -275,7 +277,14 @@
           autoplay
           playsinline
           muted
-          style="display: block; width: 100%; height: 135px; object-fit: cover; transform: scaleX(-1); background: #000;"
+          style="
+            display: block;
+            width: 100%;
+            height: 135px;
+            object-fit: cover;
+            transform: scaleX(-1);
+            background: #000;
+          "
         ></video>
         <div
           style="
@@ -284,7 +293,7 @@
             left: 8px;
             color: #fff;
             font-size: 11px;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: &quot;Segoe UI&quot;, sans-serif;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
           "
         >
@@ -443,9 +452,11 @@
       </a-light>
 
       <!-- ═══════════ MUNDO (modelo GLB completo) ═══════════ -->
+      <!-- animation-mixer reproduce la animación "animated" embebida en el GLB. -->
       <a-entity
         id="world"
         gltf-model="#scene-model"
+        animation-mixer="clip: animated; loop: repeat; crossFadeDuration: 0"
         shadow="cast: true; receive: true"
       >
       </a-entity>
@@ -457,6 +468,102 @@
       <!-- Plano cartesiano de referencia (rejilla + ejes X/Y/Z).
            Alterna desde código con toggleGrid() o con la tecla G. -->
       <a-entity id="grid" cartesian-grid visible="false"></a-entity>
+
+      <!-- ═══════════ MUROS DE COLISIÓN INVISIBLES ═══════════ -->
+      <!-- Cubos invisibles que bloquean al jugador. Se vuelven rojos al
+           activar la rejilla (tecla G) para poder ubicarlos y ajustarlos.
+           Define el tamaño con width/height/depth y la posición con position.
+           Duplica esta línea para añadir más muros: -->
+      <!--
+      <a-collision-wall width="4" height="5" depth="0.5"
+                        position="0 2.5 -10"></a-collision-wall>
+      -->
+      <a-entity id="collision-walls">
+        <a-collision-wall
+          width="1"
+          height="1"
+          depth="276"
+          position="47 0 -123"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="117"
+          height="1"
+          depth="1"
+          position="-11.5 0 -261"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="2"
+          height="1"
+          depth="228"
+          position="-72 0 -147"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="1"
+          height="1"
+          depth="26"
+          position="-175 0 -47"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="62"
+          height="1"
+          depth="1"
+          position="-206 0 -60"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="1"
+          height="1"
+          depth="71"
+          position="-237 0 -24.5"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="69"
+          height="1"
+          depth="1"
+          position="-202.5 0 11"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="1"
+          height="1"
+          depth="33"
+          position="-168 0 -5.5"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="3"
+          height="1"
+          depth="42"
+          position="-70 0 -1"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="28"
+          height="1"
+          depth="3"
+          position="-56 0 20"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="3"
+          height="1"
+          depth="39"
+          position="-38 0 0.5"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="13"
+          height="1"
+          depth="0.25"
+          position="-44.5 0 -19.2"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="13.5"
+          height="1"
+          depth="0.25"
+          position="-63.25 0 -19.2"
+        ></a-collision-wall>
+        <a-collision-wall
+          width="85"
+          height="1"
+          depth="1"
+          position="4.5 0 15"
+        ></a-collision-wall>
+      </a-entity>
 
       <!-- ═══════════ ACADEMIA ═══════════ -->
       <a-entity id="academia-building" position="0 0 -20">
@@ -564,12 +671,12 @@
     <script>
       // Cielo diurno con degradado vertical (cenit → horizonte).
       // Esfera grande con BackSide y un shader sencillo; sin dependencias extra.
-      AFRAME.registerComponent('gradient-sky', {
+      AFRAME.registerComponent("gradient-sky", {
         schema: {
-          top:      { type: 'color',  default: '#2a7fd4' },
-          bottom:   { type: 'color',  default: '#dff1ff' },
-          offset:   { type: 'number', default: 180 },
-          exponent: { type: 'number', default: 0.8 },
+          top: { type: "color", default: "#2a7fd4" },
+          bottom: { type: "color", default: "#dff1ff" },
+          offset: { type: "number", default: 180 },
+          exponent: { type: "number", default: 0.8 },
         },
         init() {
           const geo = new THREE.SphereGeometry(990, 32, 15);
@@ -578,10 +685,10 @@
             depthWrite: false,
             fog: false,
             uniforms: {
-              topColor:    { value: new THREE.Color(this.data.top) },
+              topColor: { value: new THREE.Color(this.data.top) },
               bottomColor: { value: new THREE.Color(this.data.bottom) },
-              offset:      { value: this.data.offset },
-              exponent:    { value: this.data.exponent },
+              offset: { value: this.data.offset },
+              exponent: { value: this.data.exponent },
             },
             vertexShader: `
               varying vec3 vWorldPosition;
@@ -605,10 +712,10 @@
           });
           const mesh = new THREE.Mesh(geo, mat);
           mesh.frustumCulled = false;
-          this.el.setObject3D('mesh', mesh);
+          this.el.setObject3D("mesh", mesh);
         },
         remove() {
-          this.el.removeObject3D('mesh');
+          this.el.removeObject3D("mesh");
         },
       });
     </script>

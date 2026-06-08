@@ -53,12 +53,45 @@ AFRAME.registerComponent('player-avatar', {
     this._setupBVH();
     this._collectColliders();
 
+    // Muros de colisión (collision-wall): los ya presentes en el DOM y los
+    // que se registren más tarde mediante el evento 'collision-wall-ready'.
+    this._onWallReady = (e) => this.addCollisionRoot(e.detail && e.detail.object3D);
+    window.addEventListener('collision-wall-ready', this._onWallReady);
+    document.querySelectorAll('[collision-wall]').forEach((el) => {
+      this.addCollisionRoot(el.object3D);
+    });
+
+    // Vectores reutilizables para la sincronización de bailes (tecla F).
+    this._myPos   = new THREE.Vector3();
+    this._peerPos = new THREE.Vector3();
+
     this._onKeyDown = this._onKeyDown.bind(this);
     this._onKeyUp   = this._onKeyUp.bind(this);
     this._onChat    = this._onChat.bind(this);
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup',   this._onKeyUp);
     window.addEventListener('signisland-chat', this._onChat);
+  },
+
+  /* ─── Registro de colisionadores externos (muros, etc.) ──────────────── */
+  addCollisionRoot(obj) {
+    if (!obj) return;
+    if (this.collisionRoots.indexOf(obj) === -1) {
+      this.collisionRoots.push(obj);
+    }
+    if (window.MeshBVHLib) {
+      obj.traverse((o) => {
+        if (o.isMesh && o.geometry && o.geometry.attributes.position &&
+            !o.geometry.boundsTree && o.geometry.computeBoundsTree) {
+          try { o.geometry.computeBoundsTree(); } catch (_) {}
+        }
+      });
+    }
+  },
+
+  removeCollisionRoot(obj) {
+    const i = this.collisionRoots.indexOf(obj);
+    if (i !== -1) this.collisionRoots.splice(i, 1);
   },
 
   /* ─── UI del selector de emotes ────────────────────────────────────────── */
@@ -225,6 +258,45 @@ AFRAME.registerComponent('player-avatar', {
     this._updateAnimation();
   },
 
+  /* ─── Sincronizar baile con un jugador cercano (tecla F) ─────────────── */
+  _syncNearbyDance() {
+    if (this.chatOpen || this.emoteOpen) return;
+
+    const RANGE = 8;                                  // metros
+    const danceClips = this._emotes.map((e) => e.clip);
+    this.el.object3D.getWorldPosition(this._myPos);
+
+    let bestClip = null;
+    let bestDist = RANGE;
+
+    // Avatares remotos: todos los .avatar-anim excepto el modelo local.
+    document.querySelectorAll('.avatar-anim').forEach((animEl) => {
+      if (animEl === this.playerModel) return;
+      const mix = animEl.getAttribute('animation-mixer');
+      if (!mix || danceClips.indexOf(mix.clip) === -1) return;   // no está bailando
+
+      animEl.object3D.getWorldPosition(this._peerPos);
+      const dist = this._peerPos.distanceTo(this._myPos);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestClip = mix.clip;
+      }
+    });
+
+    if (bestClip) {
+      // _playEmote actualiza el animation-mixer local, que NAF retransmite
+      // al resto, de modo que todos terminan bailando lo mismo.
+      this._playEmote(bestClip);
+      window.dispatchEvent(new CustomEvent('game-message', {
+        detail: { text: '🕺 ¡Te uniste al baile!', type: 'info' }
+      }));
+    } else {
+      window.dispatchEvent(new CustomEvent('game-message', {
+        detail: { text: '🔍 No hay nadie bailando cerca', type: 'info' }
+      }));
+    }
+  },
+
   /* ─── Chat abierto: congelar el movimiento ───────────────────────────── */
   _onChat(e) {
     this.chatOpen = !!(e.detail && e.detail.open);
@@ -236,6 +308,13 @@ AFRAME.registerComponent('player-avatar', {
 
   _onKeyDown(e) {
     if (this.chatOpen) return;
+
+    // F: unirse al baile de un jugador cercano que esté bailando.
+    if (e.code === 'KeyF') {
+      e.preventDefault();
+      this._syncNearbyDance();
+      return;
+    }
 
     if (e.code === 'KeyB') {
       e.preventDefault();
@@ -394,5 +473,6 @@ AFRAME.registerComponent('player-avatar', {
     window.removeEventListener('keydown', this._onKeyDown);
     window.removeEventListener('keyup',   this._onKeyUp);
     window.removeEventListener('signisland-chat', this._onChat);
+    window.removeEventListener('collision-wall-ready', this._onWallReady);
   },
 });
